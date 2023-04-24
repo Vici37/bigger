@@ -1,5 +1,5 @@
 require "big"
 require "spec"
-require "../src/bigger-int"
+require "../src/bigger-num"
 require "./number"
 require "./string"
