@@ -1,4 +1,4 @@
-require "big"
+# require "big"
 require "spec"
 require "../src/bigger-num"
 require "./number"
