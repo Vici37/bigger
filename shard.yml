@@ -11,6 +11,8 @@ development_dependencies:
     github: crystal-community/crystal-kcov
   ic:
     github: I3oris/ic
+  spectator:
+    gitlab: arctic-fox/spectator
 
 crystal: 1.7.3
 

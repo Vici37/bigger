@@ -1,2 +1,5 @@
 test:
-	crystal spec --profile --rand --error-trace
+	crystal spec --profile --error-trace
+
+benchmark:
+	crystal run --release bin/benchmark.cr
