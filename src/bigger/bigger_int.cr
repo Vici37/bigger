@@ -4,10 +4,10 @@ module Bigger
     alias BaseType = UInt8
     BASE_ONE      = 1u8
     BASE_NUM_BITS = sizeof(BaseType) * 8
-    BASE          = 2**BASE_NUM_BITS
+    BASE          = 2u64**BASE_NUM_BITS
     BASE_ZERO     = BaseType.zero
     # A signed version of the next type bigger than BasyType. Used as temp buffer calculation between numbers of BaseType
-    alias HigherBufferType = Int32
+    alias HigherBufferType = Int16
 
     # Least significant bit in index 0
     getter digits : Array(BaseType) = Array(BaseType).new(8)
@@ -155,41 +155,75 @@ module Bigger
       Bigger::Int.new(new_digits)
     end
 
-    def *(other : Bigger::Int) : Bigger::Int
-      # puts "calling *"
-      # TODO
-      self
-    end
-
-    def &*(other : Bigger::Int) : Bigger::Int
-      # puts "calling &*"
-      # TODO
-      self
-    end
-
-    def %(other : Bigger::Int) : Bigger::Int
-      # puts "calling %"
-      # TODO
-      self
-    end
-
     def +(other : Bigger::Int) : Bigger::Int
-      # puts "calling +"
-      new_digits = new_digits_of(other)
+      case {positive?, other.positive?}
+      when {true, true}, {false, false} then Bigger::Int.new(sum_two_numbers_of_same_sign(self, other))
+      else                                   Bigger::Int.new(*subtract_smaller_from_larger(self, other))
+      end
+    end
+
+    private def sum_two_numbers_of_same_sign(first : Bigger::Int, second : Bigger::Int) : Array(BaseType)
+      new_digits = Array(BaseType).new({first.digits.size, second.digits.size}.max + 1) { BASE_ZERO }
 
       carry = BASE_ZERO
       new_digits.size.times do |dig|
-        temp = HigherBufferType.zero + carry + (digits[dig]? || BASE_ZERO) + (other.digits[dig]? || BASE_ZERO)
-        new_digits[dig] = BASE_ZERO + (temp % BASE)
+        temp = HigherBufferType.zero + carry + (first.digits[dig]? || BASE_ZERO) + (second.digits[dig]? || BASE_ZERO)
+        new_digits.unsafe_put(dig, BASE_ZERO + (temp % BASE))
         carry = temp > BASE ? BASE_ONE : BASE_ZERO
       end
 
-      Bigger::Int.new(new_digits)
+      new_digits
     end
 
     def &+(other : Bigger::Int) : Bigger::Int
       # puts "calling &+"
       self + other
+    end
+
+    def -(other : Bigger::Int) : Bigger::Int
+      case {positive?, other.positive?}
+      when {true, false} then Bigger::Int.new(sum_two_numbers_of_same_sign(self, other))
+      when {false, true} then -Bigger::Int.new(sum_two_numbers_of_same_sign(self, other))
+      else                    Bigger::Int.new(*subtract_smaller_from_larger(self, -other))
+      end
+    end
+
+    # This method merely finds the difference between first and second, regardless of signs.
+    # It's assumed the signs of the numbers have already been determined and this difference is needed
+    # TODO: find a way to optimize this
+    private def subtract_smaller_from_larger(first : Bigger::Int, second : Bigger::Int) : Tuple(Array(BaseType), Bool)
+      # borrow = BASE_ZERO
+      # new_digits = Array(BaseType).new({first.digits.size, second.digits.size}.max) { BASE_ZERO }
+      # new_digits.size.times do |dig|
+      #   temp = HigherBufferType.zero + (first.digits[dig]? || BASE_ZERO) - (second.digits[dig]? || BASE_ZERO) - borrow + BASE
+      #   new_digits.unsafe_put(dig, BASE_ZERO + (temp % BASE))
+      #   borrow = BASE_ZERO + (temp // BASE)
+      # end
+      # {new_digits, true}
+      comp = first.compare_digits(second)
+      return {[BASE_ZERO], true} if comp == 0
+
+      larger, smaller, resulting_sign = (comp > 0 ? {first, second, first.positive?} : {second, first, second.positive?})
+
+      borrow = BASE_ZERO
+      new_digits = Array(BaseType).new(larger.digits.size) { BASE_ZERO }
+
+      0.upto(larger.digits.size - 1).each do |dig|
+        l = larger.digits.unsafe_fetch(dig)
+        s = smaller.digits[dig]? || BASE_ZERO
+        new_digits.unsafe_put(dig, l &- s &- borrow)
+        borrow = s > l ? BASE_ONE : BASE_ZERO
+      end
+      {new_digits, resulting_sign}
+    end
+
+    def - : Bigger::Int
+      # puts "calling -"
+      Bigger::Int.new(digits.dup, !sign)
+    end
+
+    def &-(other : Bigger::Int) : Bigger::Int
+      self - other
     end
 
     def ^(other : Bigger::Int) : Bigger::Int
@@ -199,61 +233,6 @@ module Bigger
         new_digits[dig] = (digits[dig]? || BASE_ZERO) ^ (digits[dig]? || BASE_ZERO)
       end
       Bigger::Int.new(new_digits)
-    end
-
-    def -(other : Bigger::Int) : Bigger::Int
-      # puts "calling -(other)"
-      new_digits = new_digits_of(other)
-
-      # puts "self: #{digits}"
-      # puts "other: #{other.digits}"
-
-      carry = HigherBufferType.zero
-      new_digits.size.times do |dig|
-        temp = carry + (digits[dig]? || BASE_ZERO) &- (other.digits[dig]? || BASE_ZERO)
-        new_digits[dig] = (temp % BaseType::MAX).to_u8
-        carry = temp // BaseType::MAX
-      end
-
-      # puts "new_digits: #{new_digits}"
-
-      Bigger::Int.new(new_digits)
-    end
-
-    # This method merely finds the difference between first and second, regardless of signs.
-    # It's assumed the signs of the numbers have already been determined and this difference is needed
-    private def subtract_smaller_from_larger(first : Bigger::Int, second : Bigger::Int) : Array(BaseType)
-      comp = first <=> second
-      return Bigger::Int.new if comp == 0
-
-      larger, smaller = (comp > 0 ? {first, second} : {second, first})
-
-      borrow = BASE_ZERO
-      new_digits = Array(BaseType).new(larger.digits.size) { BASE_ZERO }
-
-      0.upto(larger.digits.size - 1).each do |dig|
-        l = larger.digits[dig]
-        s = smaller.digits[dig]
-        if s > l || (s == l && borrow)
-          new_digits[dig] = l - s (256 + l - s - (borrow ? 1 : 0)).to_u8
-          borrow = true
-        else
-          new_digits[dif] = (l - s - (borrow ? 1 : 0)).to_u8
-          borrow = false
-        end
-      end
-      new_digits
-    end
-
-    def - : Bigger::Int
-      # puts "calling -"
-      Bigger::Int.new(digits.dup, !sign)
-    end
-
-    def &-(other : Bigger::Int) : Bigger::Int
-      # puts "calling &-"
-      # TODO
-      self
     end
 
     def /(other : Bigger::Int) : Bigger::Int
@@ -270,6 +249,24 @@ module Bigger
 
     def |(other : Bigger::Int) : Bigger::Int
       # puts "calling |"
+      # TODO
+      self
+    end
+
+    def *(other : Bigger::Int) : Bigger::Int
+      # puts "calling *"
+      # TODO
+      self
+    end
+
+    def &*(other : Bigger::Int) : Bigger::Int
+      # puts "calling &*"
+      # TODO
+      self
+    end
+
+    def %(other : Bigger::Int) : Bigger::Int
+      # puts "calling %"
       # TODO
       self
     end
@@ -330,6 +327,10 @@ module Bigger
       self
     end
 
+    def abs : Bigger::Int
+      Bigger::Int.new(digits.dup)
+    end
+
     wrap_method_in_big_int(tdiv)
 
     def remainder(other : Bigger::Int) : Bigger::Int
@@ -351,6 +352,10 @@ module Bigger
       return 1 if positive? && other.negative?
       return -1 if negative? && other.positive?
 
+      compare_digits(other)
+    end
+
+    protected def compare_digits(other : Bigger::Int) : Int32
       # Stupid heuristic - compare the number of digits
       return digits.size <=> other.digits.size unless digits.size == other.digits.size
 

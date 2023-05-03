@@ -10,66 +10,73 @@ require "./spec_helper"
 Spectator.describe Bigger::Int do
   context "base tests" do
     # Calculates the expected numbers of the digits array based on base size
-    def array_of_digits(num : Int::Primitive) : Array(Int32)
+    def array_of_digits(num : Int::Primitive)
       # A less performant but still accurate method to get the digits array
       num.to_s(2)
         .reverse
         .chars
         .each_slice(Bigger::Int::BASE_NUM_BITS)
         .to_a
-        .map(&.reverse.join.to_i(2))
+        .map(&.reverse.join.to_u8(2))
+    end
+
+    macro expect_big_int(b, num, positive = true)
+      expect(({{b.id}}).digits).to eq array_of_digits({{num.id}})
+      {% if positive %}expect(({{b.id}}).positive?).to be_true{% else %}expect(({{b.id}}).negative?).to be_true{% end %}
     end
 
     context "for initialization, it" do
       it "initializes" do
-        b = Bigger::Int.new
-        expect(b.digits).to eq array_of_digits(0)
-        expect(b.positive?).to be_true
+        expect_big_int(Bigger::Int.new, 0)
       end
 
       it "initializes from primitive" do
-        b = Bigger::Int.new(2)
-        expect(b.digits).to eq [2]
-        expect(b.positive?).to be_true
+        expect_big_int(Bigger::Int.new(2), 2)
       end
 
       it "initializes larger primitive" do
-        b = Bigger::Int.new(123456789)
-        expect(b.digits).to eq array_of_digits(123456789)
-        expect(b.positive?).to be_true
+        expect_big_int(123456789.to_bigger_i, 123456789)
       end
 
       it "initializes from negative primitive" do
-        b = Bigger::Int.new(-2)
-        expect(b.digits).to eq [2]
-        expect(b.positive?).to be_false
+        expect_big_int(Bigger::Int.new(-2), 2, false)
       end
     end
 
     context "for addition, it" do
       it "adds small numbers" do
-        b = Bigger::Int.new(2)
-        sum = b + b
-        expect(sum.digits).to eq array_of_digits(4)
-        expect(sum.positive?).to be_true
+        expect_big_int(2.to_bigger_i + 2.to_bigger_i, 4)
       end
 
       it "adds larger numbers that cause overflow" do
-        b = Bigger::Int.new(255)
-        sum = b + b
-        expect(sum.digits).to eq array_of_digits(510)
+        expect_big_int(255.to_bigger_i + 255.to_bigger_i, 510)
       end
 
       it "adds large numbers" do
-        b1 = Bigger::Int.new(12345678987654321)
-        b2 = Bigger::Int.new(98765432123456789)
-
-        sum = b1 + b2
-        expect(sum.digits).to eq array_of_digits(12345678987654321 + 98765432123456789)
+        expect_big_int(12345678987654321.to_bigger_i + 98765432123456789.to_bigger_i, 12345678987654321 + 98765432123456789)
       end
     end
 
     context "for subtraction, it" do
+      it "subtracts 2 from 3" do
+        expect_big_int(3.to_bigger_i - 2.to_bigger_i, 1)
+      end
+
+      it "subtracts 3 from 2" do
+        expect_big_int(2.to_bigger_i - 3.to_bigger_i, 1, false)
+      end
+
+      it "subtracts 7 from 13" do
+        expect_big_int(13.to_bigger_i - 7.to_bigger_i, 6)
+      end
+
+      it "subtracts 71 from 257" do
+        expect_big_int(257.to_bigger_i - 71.to_bigger_i, 186)
+      end
+
+      it "subtracts 257 from 71" do
+        expect_big_int(71.to_bigger_i - 257.to_bigger_i, 186, false)
+      end
     end
   end
 
