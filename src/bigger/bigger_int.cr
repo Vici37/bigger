@@ -95,7 +95,6 @@ module Bigger
     def //(other : Bigger::Int) : Bigger::Int
       return Bigger::Int.new if other > self
 
-      # puts "calling //"
       new_digits = Array(BaseType).new(digits.size) { BASE_ZERO }
       temp1 = Bigger::Int.new(0)
       temp2 = Bigger::Int.new(0)
@@ -112,13 +111,13 @@ module Bigger
     end
 
     def >>(other : Int32) : Bigger::Int
-      # puts "calling >>"
-      new_digits = digits.dup
-      while other > BASE_NUM_BITS
-        new_digits.shift
-        other -= BASE_NUM_BITS
-      end
+      return self << -other if other < 0
 
+      new_digits = digits.dup
+      new_digits.shift(other // BASE_NUM_BITS)
+      other %= BASE_NUM_BITS
+
+      return Bigger::Int.new if new_digits.empty?
       return Bigger::Int.new(new_digits) if other == 0
 
       new_digits.size.times do |i|
@@ -130,25 +129,22 @@ module Bigger
     end
 
     def <<(other : Int32) : Bigger::Int
+      return self >> -other if other < 0
       # puts "calling <<"
-      new_digits = digits.dup
-
       start_idx = other // BASE_NUM_BITS
-      while other > BASE_NUM_BITS
-        new_digits.insert(0, BASE_ZERO)
-        new_digits << BASE_ZERO
-        other -= BASE_NUM_BITS
-      end
+      other %= BASE_NUM_BITS
+      new_digits = Array(BaseType).new(digits.size + start_idx) { BASE_ZERO }
+      new_digits[start_idx, digits.size] = digits
 
       return Bigger::Int.new(new_digits) if other == 0
 
       carry_over = BASE_ZERO
       offset = BASE_NUM_BITS - other
-      @digits << BASE_ZERO
+      new_digits << BASE_ZERO
 
-      start_idx.upto(@digits.size + start_idx).each do |i|
-        temp = @digits[i] >> offset
-        @digits[i] = (@digits[i] << other) + carry_over
+      start_idx.upto(digits.size + start_idx - 1).each do |i|
+        temp = digits[i - start_idx] >> offset
+        new_digits[i] = (digits[i - start_idx] << other) + carry_over
         carry_over = temp
       end
 
@@ -218,8 +214,7 @@ module Bigger
     end
 
     def - : Bigger::Int
-      # puts "calling -"
-      Bigger::Int.new(digits.dup, !sign)
+      Bigger::Int.new(digits.dup, !@sign)
     end
 
     def &-(other : Bigger::Int) : Bigger::Int

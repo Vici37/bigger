@@ -22,7 +22,7 @@ Spectator.describe Bigger::Int do
 
     macro expect_big_int(b, num, positive = true)
       expect(({{b.id}}).digits).to eq array_of_digits({{num.id}})
-      {% if positive %}expect(({{b.id}}).positive?).to be_true{% else %}expect(({{b.id}}).negative?).to be_true{% end %}
+      {% if positive %}expect(({{b.id}}).positive?).to be_true{% elsif positive == false %}expect(({{b.id}}).negative?).to be_true{% else %}{% end %}
     end
 
     context "for initialization, it" do
@@ -76,6 +76,62 @@ Spectator.describe Bigger::Int do
 
       it "subtracts 257 from 71" do
         expect_big_int(71.to_bigger_i - 257.to_bigger_i, 186, false)
+      end
+    end
+
+    context "for negation, it" do
+      it "negates" do
+        expect_big_int(1.to_bigger_i, 1)
+        expect_big_int(-(1.to_bigger_i), 1, false)
+        expect_big_int(-(-(1.to_bigger_i)), 1)
+      end
+    end
+
+    context "for bitshifting, it" do
+      it "shifts left 1" do
+        expect_big_int(15.to_bigger_i << 1, 15 << 1)
+      end
+
+      it "shifts left 4" do
+        expect_big_int(15.to_bigger_i << 4, 15 << 4)
+      end
+
+      it "shifts left 9" do
+        expect_big_int(15.to_bigger_i << 9, 15 << 9)
+      end
+
+      it "shifts left -1" do
+        expect_big_int(15.to_bigger_i << -1, 15 << -1)
+      end
+
+      it "shifts left #{Bigger::Int::BASE_NUM_BITS}" do
+        expect_big_int(15.to_bigger_i << Bigger::Int::BASE_NUM_BITS, 15 << Bigger::Int::BASE_NUM_BITS)
+      end
+
+      it "shifts right 1" do
+        expect_big_int(15.to_bigger_i >> 1, 15 >> 1)
+      end
+
+      it "shifts right 4" do
+        expect_big_int(15.to_bigger_i >> 4, 15 >> 4)
+      end
+
+      it "shifts right 9" do
+        expect_big_int(15.to_bigger_i >> 9, 15 >> 9)
+      end
+
+      it "shifts right -1" do
+        expect_big_int(15.to_bigger_i >> -1, 15 >> -1)
+      end
+
+      it "shifts right #{Bigger::Int::BASE_NUM_BITS}" do
+        expect_big_int(15.to_bigger_i >> Bigger::Int::BASE_NUM_BITS, 15 >> Bigger::Int::BASE_NUM_BITS)
+      end
+    end
+
+    context "for division, it", :focus do
+      it "// 2" do
+        expect_big_int(8.to_bigger_i // 2, 8 // 2)
       end
     end
   end
