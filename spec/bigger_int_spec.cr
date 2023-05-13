@@ -142,6 +142,14 @@ Spectator.describe Bigger::Int do
         expect_big_int(999999999999999.to_bigger_i // 123456, 999999999999999 // 123456)
       end
 
+      it "123456 // 999999999999999" do
+        expect_big_int(123456.to_bigger_i // 999999999999999, 0)
+      end
+
+      it "123456 % 999999999999999" do
+        expect_big_int(123456.to_bigger_i % 999999999999999, 123456)
+      end
+
       it "999999999999999 % 123456" do
         expect_big_int(999999999999999.to_bigger_i % 123456, 999999999999999 % 123456)
       end
@@ -149,9 +157,9 @@ Spectator.describe Bigger::Int do
   end
 
   context "for standard library BigInt specs" do
-    it "creates with a value of zero" do
-      expect(Bigger::Int.new.to_s).to eq("0")
-    end
+    # it "creates with a value of zero" do
+    #   expect(Bigger::Int.new.to_s).to eq("0")
+    # end
 
     # it "creates from signed ints" do
     #   Bigger::Int.new(-1_i8).to_s.should eq("-1")

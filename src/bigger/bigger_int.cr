@@ -98,7 +98,7 @@ module Bigger
     end
 
     private def div_and_remainder(first : Bigger::Int, second : Bigger::Int) : Tuple(Bigger::Int, Bigger::Int)
-      return {Bigger::Int.new, second.clone} if second > first
+      return {Bigger::Int.new, first.clone} if second > first
 
       temp1 = Bigger::Int.new
       temp2 = Bigger::Int.new
