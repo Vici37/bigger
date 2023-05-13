@@ -157,23 +157,23 @@ Spectator.describe Bigger::Int do
   end
 
   context "for standard library BigInt specs" do
-    # it "creates with a value of zero" do
-    #   expect(Bigger::Int.new.to_s).to eq("0")
-    # end
+    it "creates with a value of zero" do
+      expect(Bigger::Int.new.to_s).to eq("0")
+    end
 
-    # it "creates from signed ints" do
-    #   Bigger::Int.new(-1_i8).to_s.should eq("-1")
-    #   Bigger::Int.new(-1_i16).to_s.should eq("-1")
-    #   Bigger::Int.new(-1_i32).to_s.should eq("-1")
-    #   Bigger::Int.new(-1_i64).to_s.should eq("-1")
-    # end
+    it "creates from signed ints" do
+      expect(Bigger::Int.new(-1_i8).to_s).to eq "-1"
+      expect(Bigger::Int.new(-1_i16).to_s).to eq "-1"
+      expect(Bigger::Int.new(-1_i32).to_s).to eq "-1"
+      expect(Bigger::Int.new(-1_i64).to_s).to eq "-1"
+    end
 
-    #   it "creates from unsigned ints" do
-    #     Bigger::Int.new(1_u8).to_s.should eq("1")
-    #     Bigger::Int.new(1_u16).to_s.should eq("1")
-    #     Bigger::Int.new(1_u32).to_s.should eq("1")
-    #     Bigger::Int.new(1_u64).to_s.should eq("1")
-    #   end
+    it "creates from unsigned ints" do
+      expect(Bigger::Int.new(1_u8).to_s).to eq("1")
+      expect(Bigger::Int.new(1_u16).to_s).to eq("1")
+      expect(Bigger::Int.new(1_u32).to_s).to eq("1")
+      expect(Bigger::Int.new(1_u64).to_s).to eq("1")
+    end
 
     #   it "creates from string" do
     #     Bigger::Int.new("12345678").to_s.should eq("12345678")

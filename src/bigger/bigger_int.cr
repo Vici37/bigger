@@ -506,12 +506,14 @@ module Bigger
 
     def to_s(io : IO, base : Int::Primitive = 10) : Nil
       # puts "to_s(io)"
-      temp = self
+      temp = self.abs
       len = temp // base + 1
       # puts "len: #{len.digits}"
       io << "-" unless @sign
+      # pp! temp.digits, len.digits
       len.times do
-        # puts "len: #{len.digits}"
+        # pp! (temp % base).digits
+        # pp! (temp % base).to_i
         # TODO: this is gonna be reversed from what we want to display
         io << PRINT_DIGITS[(temp % base).to_i]
         temp //= base
