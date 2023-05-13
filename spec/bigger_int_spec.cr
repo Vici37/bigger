@@ -129,9 +129,21 @@ Spectator.describe Bigger::Int do
       end
     end
 
-    context "for division, it", :focus do
-      it "// 2" do
+    context "for division, it" do
+      it "8 // 2" do
         expect_big_int(8.to_bigger_i // 2, 8 // 2)
+      end
+
+      it "12345 // 2" do
+        expect_big_int(12345.to_bigger_i // 2, 12345 // 2)
+      end
+
+      it "999999999999999 // 123456" do
+        expect_big_int(999999999999999.to_bigger_i // 123456, 999999999999999 // 123456)
+      end
+
+      it "999999999999999 % 123456" do
+        expect_big_int(999999999999999.to_bigger_i % 123456, 999999999999999 % 123456)
       end
     end
   end

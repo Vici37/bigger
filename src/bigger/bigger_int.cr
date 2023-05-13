@@ -35,6 +35,7 @@ module Bigger
         @digits << (BASE_ZERO + (inp & BaseType::MAX))
         inp = inp >> BASE_NUM_BITS
       end
+      @digits << BASE_ZERO if @digits.empty?
       # puts "init from int primitive #{inp}: #{digits}"
     end
 
@@ -93,21 +94,27 @@ module Bigger
     # GMP documentation: https://gmplib.org/manual/Concept-Index
 
     def //(other : Bigger::Int) : Bigger::Int
-      return Bigger::Int.new if other > self
+      div_and_remainder(self, other)[0]
+    end
 
-      new_digits = Array(BaseType).new(digits.size) { BASE_ZERO }
-      temp1 = Bigger::Int.new(0)
-      temp2 = Bigger::Int.new(0)
-      quot = Bigger::Int.new(new_digits)
-      new_digits.size.downto(0).each do |i|
-        temp1.digits[0] = digits[i]
+    private def div_and_remainder(first : Bigger::Int, second : Bigger::Int) : Tuple(Bigger::Int, Bigger::Int)
+      return {Bigger::Int.new, second.clone} if second > first
+
+      temp1 = Bigger::Int.new
+      temp2 = Bigger::Int.new
+      new_digits = Array(BaseType).new(first.digits.size) { BASE_ZERO }
+      (first.digits.size - 1).downto(0).each do |i|
+        temp1.digits[0] = first.digits[i]
         temp2 = Bigger::Int.new(0)
-        while temp1 >= (temp2 + other)
-          quot.digits[i] += 1
-          temp2 += other
+        while temp1 >= (temp2 + second)
+          new_digits[i] += 1
+          temp2 += second
         end
+        temp1 -= temp2
+        temp1 = temp1 << BASE_NUM_BITS
       end
-      quot
+      temp1 = temp1 >> BASE_NUM_BITS
+      {Bigger::Int.new(new_digits), temp1}
     end
 
     def >>(other : Int32) : Bigger::Int
@@ -165,7 +172,10 @@ module Bigger
       new_digits.size.times do |dig|
         temp = HigherBufferType.zero + carry + (first.digits[dig]? || BASE_ZERO) + (second.digits[dig]? || BASE_ZERO)
         new_digits.unsafe_put(dig, BASE_ZERO + (temp % BASE))
-        carry = temp > BASE ? BASE_ONE : BASE_ZERO
+        # Different techniques. Current one is fastest
+        # carry = temp // BASE
+        # carry = temp >= BASE ? BASE_ONE : BASE_ZERO
+        carry = BASE_ZERO + (temp >> BASE_NUM_BITS)
       end
 
       new_digits
@@ -261,9 +271,7 @@ module Bigger
     end
 
     def %(other : Bigger::Int) : Bigger::Int
-      # puts "calling %"
-      # TODO
-      self
+      div_and_remainder(self, other)[1]
     end
 
     macro wrap_in_big_int(operator)
@@ -352,12 +360,13 @@ module Bigger
 
     protected def compare_digits(other : Bigger::Int) : Int32
       # Stupid heuristic - compare the number of digits
-      return digits.size <=> other.digits.size unless digits.size == other.digits.size
+      return 1 if digits.size > other.digits.size
+      return -1 if other.digits.size > digits.size
 
       # Ok, numbers have the same number of digits. Do a digit-wise comparison
       (digits.size - 1).downto(0).each do |dig|
-        temp = digits[dig] <=> other.digits[dig]
-        return temp unless temp == 0
+        return 1 if digits[dig] > other.digits[dig]
+        return -1 if digits[dig] < other.digits[dig]
       end
 
       # well, I guess they're the same
