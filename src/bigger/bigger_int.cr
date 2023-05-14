@@ -20,24 +20,26 @@ module Bigger
     end
 
     def initialize(inp : String, base : Int32 = 10)
-      # positive_inp = if inp.starts_with?("-")
-      #                  @sign = false
-      #                  inp[1..]
-      #                else
-      #                  inp
-      #                end
-      # pp! positive_inp
+      positive_inp = if inp.starts_with?("-")
+                       @sign = false
+                       inp[1..]
+                     elsif inp.starts_with?("+")
+                       inp[1..]
+                     else
+                       inp
+                     end
 
-      # temp = Bigger::Int.new
+      temp = Bigger::Int.new
 
-      # pp! temp.digits
-      # positive_inp.reverse.each_char do |char|
-      #   next if char == '_'
-      #   temp += PRINT_DIGITS.index(char) || raise "Unrecognized character #{char} for input #{inp} in base #{base}"
-      #   temp *= base
-      # end
-      # temp //= base
-      # @digits = temp.digits
+      positive_inp.each_char do |char|
+        next if char == '_'
+        ind = PRINT_DIGITS.index(char) || raise "Unrecognized character #{char} for input #{inp} in base #{base}"
+        raise "Character '#{char}' isn't valid for base #{base}" if ind >= base
+        temp += ind
+        temp *= base
+      end
+      temp //= base
+      @digits = temp.digits
     end
 
     def initialize(inp : ::Int)
@@ -290,7 +292,7 @@ module Bigger
           temp_int *= other.digits[j]
           temp_int += carry
           new_digits.unsafe_put(j + i, BASE_ZERO + (temp_int % BASE))
-          carry = temp_int // BASE
+          carry = temp_int >> BASE_NUM_BITS
           # pp! new_digits.reverse, temp_int, carry, (temp_int % BASE)
         end
         new_digits.unsafe_put(other.digits.size + i, BASE_ZERO + carry)
@@ -540,13 +542,15 @@ module Bigger
     # TODO: add missing to_* methods
 
     def to_s(io : IO, base : Int::Primitive = 10) : Nil
+      return io << "0" if digits.size == 1 && digits[0] == 0
+      io << '-' unless @sign
       temp = self.abs
-      len = temp // base + 1
-      io << "-" unless @sign
-      len.times do
-        io << PRINT_DIGITS[(temp % base).to_i]
+      str = [] of Char
+      while temp > 0
+        str << PRINT_DIGITS[(temp % base).to_i]
         temp //= base
       end
+      str.reverse.each { |c| io << c }
     end
 
     def to_s(base : Int::Primitive = 10) : String

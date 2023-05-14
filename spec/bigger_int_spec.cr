@@ -41,6 +41,14 @@ Spectator.describe Bigger::Int do
       it "initializes from negative primitive" do
         expect_big_int(Bigger::Int.new(-2), 2, false)
       end
+
+      it "initializes from string (1234)" do
+        expect_big_int(Bigger::Int.new("1234"), 1234)
+      end
+
+      it "initializes from longer string (12345678)" do
+        expect_big_int(Bigger::Int.new("12345678"), 12345678)
+      end
     end
 
     context "for addition, it" do
@@ -193,12 +201,12 @@ Spectator.describe Bigger::Int do
       expect(Bigger::Int.new(1_u64).to_s).to eq("1")
     end
 
-    # it "creates from string" do
-    #   expect(Bigger::Int.new("12345678").to_s).to eq("12345678")
-    #   expect(Bigger::Int.new("123_456_78").to_s).to eq("12345678")
-    #   expect(Bigger::Int.new("+12345678").to_s).to eq("12345678")
-    #   expect(Bigger::Int.new("-12345678").to_s).to eq("-12345678")
-    # end
+    it "creates from string" do
+      expect(Bigger::Int.new("12345678").to_s).to eq("12345678")
+      expect(Bigger::Int.new("123_456_78").to_s).to eq("12345678")
+      expect(Bigger::Int.new("+12345678").to_s).to eq("12345678")
+      expect(Bigger::Int.new("-12345678").to_s).to eq("-12345678")
+    end
 
     #   it "raises if creates from string but invalid" do
     #     expect_raises ArgumentError, "Invalid Bigger::Int: 123 hello 456" do
