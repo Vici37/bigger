@@ -7,7 +7,9 @@ module Bigger
     BASE          = 2u64**BASE_NUM_BITS
     BASE_ZERO     = BaseType.zero
     # A signed version of the next type bigger than BasyType. Used as temp buffer calculation between numbers of BaseType
-    alias HigherBufferType = Int16
+    alias HigherBufferType = UInt16
+
+    PRINT_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".each_char.to_a
 
     # Least significant bit in index 0
     getter digits : Array(BaseType) = Array(BaseType).new(8)
@@ -18,8 +20,24 @@ module Bigger
     end
 
     def initialize(inp : String, base : Int32 = 10)
-      # TODO
-      # puts "init from string '#{inp}'"
+      # positive_inp = if inp.starts_with?("-")
+      #                  @sign = false
+      #                  inp[1..]
+      #                else
+      #                  inp
+      #                end
+      # pp! positive_inp
+
+      # temp = Bigger::Int.new
+
+      # pp! temp.digits
+      # positive_inp.reverse.each_char do |char|
+      #   next if char == '_'
+      #   temp += PRINT_DIGITS.index(char) || raise "Unrecognized character #{char} for input #{inp} in base #{base}"
+      #   temp *= base
+      # end
+      # temp //= base
+      # @digits = temp.digits
     end
 
     def initialize(inp : ::Int)
@@ -259,15 +277,34 @@ module Bigger
     end
 
     def *(other : Bigger::Int) : Bigger::Int
-      # puts "calling *"
-      # TODO
-      self
+      prod = Bigger::Int.new
+      # pp! digits, other.digits
+      (digits.size).times do |i|
+        new_digits = Array(BaseType).new(other.digits.size + 1 + i) { BASE_ZERO }
+        # TODO: replace Int32 with Higher... and figure out the arithmetic overflow
+        carry = HigherBufferType.zero
+        (other.digits.size).times do |j|
+          # temp_int = HigherBufferType.zero
+          temp_int = HigherBufferType.zero
+          temp_int += digits[i]
+          temp_int *= other.digits[j]
+          temp_int += carry
+          new_digits.unsafe_put(j + i, BASE_ZERO + (temp_int % BASE))
+          carry = temp_int // BASE
+          # pp! new_digits.reverse, temp_int, carry, (temp_int % BASE)
+        end
+        new_digits.unsafe_put(other.digits.size + i, BASE_ZERO + carry)
+        # puts "--------"
+        # pp! new_digits.reverse
+        temp = Bigger::Int.new(new_digits)
+        prod += temp
+      end
+      # pp! prod.digits.reverse
+      prod
     end
 
     def &*(other : Bigger::Int) : Bigger::Int
-      # puts "calling &*"
-      # TODO
-      self
+      self * other
     end
 
     def %(other : Bigger::Int) : Bigger::Int
@@ -502,19 +539,11 @@ module Bigger
 
     # TODO: add missing to_* methods
 
-    PRINT_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
     def to_s(io : IO, base : Int::Primitive = 10) : Nil
-      # puts "to_s(io)"
       temp = self.abs
       len = temp // base + 1
-      # puts "len: #{len.digits}"
       io << "-" unless @sign
-      # pp! temp.digits, len.digits
       len.times do
-        # pp! (temp % base).digits
-        # pp! (temp % base).to_i
-        # TODO: this is gonna be reversed from what we want to display
         io << PRINT_DIGITS[(temp % base).to_i]
         temp //= base
       end

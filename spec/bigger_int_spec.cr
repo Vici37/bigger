@@ -154,6 +154,24 @@ Spectator.describe Bigger::Int do
         expect_big_int(999999999999999.to_bigger_i % 123456, 999999999999999 % 123456)
       end
     end
+
+    context "for multiplication, it" do
+      it "2 * 2" do
+        expect_big_int(2.to_bigger_i * 2, 4)
+      end
+
+      it "36 * 2" do
+        expect_big_int(36.to_bigger_i * 2, 72)
+      end
+
+      it "255 * 8" do
+        expect_big_int(255.to_bigger_i * 8, 255 * 8)
+      end
+
+      it "123456 * 654321" do
+        expect_big_int(123456.to_bigger_i * 654321, 123456u64 * 654321)
+      end
+    end
   end
 
   context "for standard library BigInt specs" do
@@ -175,12 +193,12 @@ Spectator.describe Bigger::Int do
       expect(Bigger::Int.new(1_u64).to_s).to eq("1")
     end
 
-    #   it "creates from string" do
-    #     Bigger::Int.new("12345678").to_s.should eq("12345678")
-    #     Bigger::Int.new("123_456_78").to_s.should eq("12345678")
-    #     Bigger::Int.new("+12345678").to_s.should eq("12345678")
-    #     Bigger::Int.new("-12345678").to_s.should eq("-12345678")
-    #   end
+    # it "creates from string" do
+    #   expect(Bigger::Int.new("12345678").to_s).to eq("12345678")
+    #   expect(Bigger::Int.new("123_456_78").to_s).to eq("12345678")
+    #   expect(Bigger::Int.new("+12345678").to_s).to eq("12345678")
+    #   expect(Bigger::Int.new("-12345678").to_s).to eq("-12345678")
+    # end
 
     #   it "raises if creates from string but invalid" do
     #     expect_raises ArgumentError, "Invalid Bigger::Int: 123 hello 456" do
