@@ -1,5 +1,18 @@
+struct Int
+  include Comparable(Bigger::Int)
+
+  def <=>(other : Bigger::Int) : Int32
+    -(other <=> self)
+  end
+end
+
 {% for type in ::Int::Primitive.union_types %}
 struct {{type.id}}
+  include Comparable(Bigger::Int)
+
+  def <=>(other : Bigger::Int) : Int32
+    -(other <=> self)
+  end
   # def to_big_i : Bigger::Int
   #   Bigger::Int.new(self)
   # end
@@ -49,5 +62,7 @@ struct {{type.id}}
   def gcd(other : Bigger::Int) : Bigger::Int
     to_big_i.gcd(other)
   end
+
+
 end
 {% end %}

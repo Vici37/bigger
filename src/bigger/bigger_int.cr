@@ -33,8 +33,8 @@ module Bigger
 
       positive_inp.each_char do |char|
         next if char == '_'
-        ind = PRINT_DIGITS.index(char) || raise "Unrecognized character #{char} for input #{inp} in base #{base}"
-        raise "Character '#{char}' isn't valid for base #{base}" if ind >= base
+        ind = PRINT_DIGITS.index(char) || raise ArgumentError.new("Unrecognized character '#{char}' for input \"#{inp}\" in base #{base}")
+        raise ArgumentError.new("Character '#{char}' isn't valid for base #{base} (expected one of [#{PRINT_DIGITS[..base]}])") if ind >= base
         temp += ind
         temp *= base
       end
@@ -42,26 +42,19 @@ module Bigger
       @digits = temp.digits
     end
 
-    def initialize(inp : ::Int)
-      # TODO
-      # puts "init from int #{inp}"
-      # puts caller.join("\n")
-    end
-
-    def initialize(inp : ::Int::Primitive)
+    def initialize(inp : ::Int::Primitive | ::Int)
       @sign = inp >= 0
       inp = inp.abs
       while inp > 0
-        @digits << (BASE_ZERO + (inp & BaseType::MAX))
+        @digits << (inp & BaseType::MAX).to_u8
         inp = inp >> BASE_NUM_BITS
       end
       @digits << BASE_ZERO if @digits.empty?
       # puts "init from int primitive #{inp}: #{digits}"
     end
 
-    def initialize(inp : ::Float::Primitive)
-      # TODO
-      # puts "init from float primitive #{inp}"
+    def initialize(inp : ::Float::Primitive | ::Number)
+      initialize(inp.floor.to_i64)
     end
 
     def initialize
@@ -313,23 +306,25 @@ module Bigger
       div_and_remainder(self, other)[1]
     end
 
-    macro wrap_in_big_int(operator)
-      def {{operator.id}}(other : Int::Primitive) : Bigger::Int
+    macro wrap_in_big_int(operator, *, return_type = "Bigger::Int")
+      def {{operator.id}}(other : Int::Primitive) : {{return_type.id}}
+        # puts "calling primitive method {{operator.id}} with #{other}"
         # puts "calling {{operator.id}} with primitive"
-        self {{operator.id}} Bigger::Int.new(other)
+        self.{{operator.id}} Bigger::Int.new(other)
       end
 
       # TODO: support any Int without somehow colliding with Bigger::Int also being an Int (stack overflow)
-      # def {{operator.id}}(other : Int) : Bigger::Int
-      #   other.is_a?(Bigger::Int) ? self {{operator.id}} other
-      #   self {{operator.id}} Bigger::Int.new(other)
-      # end
+      def {{operator.id}}(other : Int | ::Number) : {{return_type.id}}
+        # puts "calling int method {{operator.id}} with #{other}"
+        other.is_a?(Bigger::Int) ? (self.{{operator.id}} other) : (self.{{operator.id}} Bigger::Int.new(other))
+      end
     end
 
     wrap_in_big_int("//")
     # TODO
     # wrap_in_big_int(">>")
     # wrap_in_big_int("<<")
+    wrap_in_big_int("<=>", return_type: "Int32")
     wrap_in_big_int("*")
     wrap_in_big_int("&*")
     wrap_in_big_int("%")
@@ -344,24 +339,13 @@ module Bigger
 
     # ============================ OTHER ================================
 
-    macro wrap_method_in_big_int(method)
-      def {{method.id}}(other : Int::Primitive) : Bigger::Int
-        # puts "calling {{method.id}} with primitive"
-        {{method.id}}(Bigger::Int.new(other))
-      end
-
-      # def {{method.id}}(other : Int) : Bigger::Int
-      #   {{method.id}}(Bigger::Int.new(other))
-      # end
-    end
-
     def gcd(other : Bigger::Int) : Bigger::Int
       # puts "calling gcd"
       # TODO
       self
     end
 
-    wrap_method_in_big_int(gcd)
+    wrap_in_big_int(gcd)
 
     def tdiv(other : Int) : Bigger::Int
       # puts "calling tdiv"
@@ -373,7 +357,7 @@ module Bigger
       Bigger::Int.new(digits.dup)
     end
 
-    wrap_method_in_big_int(tdiv)
+    wrap_in_big_int(tdiv)
 
     def remainder(other : Bigger::Int) : Bigger::Int
       # puts "calling remainder"
@@ -381,16 +365,17 @@ module Bigger
       self
     end
 
-    wrap_method_in_big_int(remainder)
+    wrap_in_big_int(remainder)
 
     def unsafe_shr(other : Bigger::Int) : Bigger::Int
       # puts "calling unsafe_shr"
       self >> other
     end
 
-    wrap_method_in_big_int(unsafe_shr)
+    wrap_in_big_int(unsafe_shr)
 
     def <=>(other : Bigger::Int) : Int32
+      # puts "Comparing other bigger int"
       return 1 if positive? && other.negative?
       return -1 if negative? && other.positive?
 
@@ -410,10 +395,6 @@ module Bigger
 
       # well, I guess they're the same
       0
-    end
-
-    def <=>(other : Int::Primitive) : Int32
-      self <=> Bigger::Int.new(other)
     end
 
     private def trim_outter_zeros
@@ -541,7 +522,7 @@ module Bigger
 
     # TODO: add missing to_* methods
 
-    def to_s(io : IO, base : Int::Primitive = 10) : Nil
+    def to_s(io : IO, base : ::Int::Primitive = 10) : Nil
       return io << "0" if digits.size == 1 && digits[0] == 0
       io << '-' unless @sign
       temp = self.abs
@@ -553,7 +534,7 @@ module Bigger
       str.reverse.each { |c| io << c }
     end
 
-    def to_s(base : Int::Primitive = 10) : String
+    def to_s(base : ::Int::Primitive = 10) : String
       # puts "to_s"
       ret = String.build do |bob|
         to_s(bob, base)

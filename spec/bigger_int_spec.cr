@@ -208,23 +208,23 @@ Spectator.describe Bigger::Int do
       expect(Bigger::Int.new("-12345678").to_s).to eq("-12345678")
     end
 
-    #   it "raises if creates from string but invalid" do
-    #     expect_raises ArgumentError, "Invalid Bigger::Int: 123 hello 456" do
-    #       Bigger::Int.new("123 hello 456")
-    #     end
-    #   end
+    it "raises if creates from string but invalid" do
+      expect_raises ArgumentError, "Unrecognized character ' ' for input \"123 hello 456\" in base 10" do
+        Bigger::Int.new("123 hello 456")
+      end
+    end
 
-    #   it "creates from float" do
-    #     Bigger::Int.new(12.3).to_s.should eq("12")
-    #   end
+    it "creates from float" do
+      expect(Bigger::Int.new(12.3).to_s).to eq("12")
+    end
 
-    #   it "compares" do
-    #     1.to_big_i.should eq(1.to_big_i)
-    #     1.to_big_i.should eq(1)
-    #     1.to_big_i.should eq(1_u8)
+    it "compares" do
+      expect(1.to_bigger_i).to eq(1.to_bigger_i)
+      expect(1.to_bigger_i).to eq(1)
+      expect(1.to_bigger_i).to eq(1_u8)
 
-    #     [3.to_big_i, 2.to_big_i, 10.to_big_i, 4, 8_u8].sort.should eq([2, 3, 4, 8, 10])
-    #   end
+      expect([3.to_bigger_i, 2.to_bigger_i, 10.to_bigger_i, 4, 8_u8].sort).to eq([2, 3, 4, 8, 10])
+    end
 
     #   it "compares against float" do
     #     1.to_big_i.should eq(1.0)
