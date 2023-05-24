@@ -409,10 +409,11 @@ module Bigger
 
     def <=>(other : Bigger::Int) : Int32
       # puts "Comparing other bigger int"
+      # pp! negative?, other.negative?
       return 1 if positive? && other.negative?
       return -1 if negative? && other.positive?
 
-      compare_digits(other)
+      positive? ? compare_digits(other) : -compare_digits(other)
     end
 
     def <=>(other : ::Float) : Int32
@@ -421,7 +422,10 @@ module Bigger
       -1
     end
 
+    # Returns the <=> operator of self's and other's digits as if they were both positive numbers
     protected def compare_digits(other : Bigger::Int) : Int32
+      # puts caller.join("\n\t")
+      # pp! digits, other.digits
       # Stupid heuristic - compare the number of digits
       return 1 if digits.size > other.digits.size
       return -1 if other.digits.size > digits.size
@@ -560,6 +564,17 @@ module Bigger
     end
 
     # TODO: add missing to_* methods
+
+    def inspect(io : IO) : Nil
+      io << (positive? ? "+" : "-")
+      io << "["
+      digits.each_with_index { |d, i| io << d.to_s.rjust(3); io << ", " unless i == (digits.size - 1) }
+      io << "]"
+      io << "("
+      to_s(io)
+      io << ")"
+      # io << digits.map(&.to_s.rjust(3)).to_s
+    end
 
     def to_s(io : IO, base : ::Int::Primitive = 10) : Nil
       return io << "0" if digits.size == 1 && digits[0].zero?

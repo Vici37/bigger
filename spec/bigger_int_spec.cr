@@ -194,7 +194,7 @@ Spectator.describe Bigger::Int do
     end
   end
 
-  context "for standard library BigInt specs" do
+  context "with standard library BigInt specs" do
     it "creates with a value of zero" do
       expect(Bigger::Int.new.to_s).to eq("0")
     end
@@ -272,67 +272,67 @@ Spectator.describe Bigger::Int do
       expect(-11.to_bigger_i.divmod(-2)).to eq({5, -1})
     end
 
-    #   it "adds" do
-    #     (1.to_big_i + 2.to_big_i).should eq(3.to_big_i)
-    #     (1.to_big_i + 2).should eq(3.to_big_i)
-    #     (1.to_big_i + 2_u8).should eq(3.to_big_i)
-    #     (5.to_big_i + (-2_i64)).should eq(3.to_big_i)
-    #     (5.to_big_i + Int64::MAX).should be > Int64::MAX.to_big_i
-    #     (5.to_big_i + Int64::MAX).should eq(Int64::MAX.to_big_i + 5)
+    it "adds" do
+      expect((1.to_bigger_i + 2.to_bigger_i)).to eq(3.to_bigger_i)
+      expect((1.to_bigger_i + 2)).to eq(3.to_bigger_i)
+      expect((1.to_bigger_i + 2_u8)).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i + (-2_i64))).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i + Int64::MAX)).to be > Int64::MAX.to_bigger_i
+      expect((5.to_bigger_i + Int64::MAX)).to eq(Int64::MAX.to_bigger_i + 5)
 
-    #     (2 + 1.to_big_i).should eq(3.to_big_i)
+      expect((2 + 1.to_bigger_i)).to eq(3.to_bigger_i)
 
-    #     (1.to_big_i &+ 2.to_big_i).should eq(3.to_big_i)
-    #     (1.to_big_i &+ 2).should eq(3.to_big_i)
-    #     (1.to_big_i &+ 2_u8).should eq(3.to_big_i)
-    #     (5.to_big_i &+ (-2_i64)).should eq(3.to_big_i)
-    #     (5.to_big_i &+ Int64::MAX).should be > Int64::MAX.to_big_i
-    #     (5.to_big_i &+ Int64::MAX).should eq(Int64::MAX.to_big_i &+ 5)
+      expect((1.to_bigger_i &+ 2.to_bigger_i)).to eq(3.to_bigger_i)
+      expect((1.to_bigger_i &+ 2)).to eq(3.to_bigger_i)
+      expect((1.to_bigger_i &+ 2_u8)).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i &+ (-2_i64))).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i &+ Int64::MAX)).to be > Int64::MAX.to_bigger_i
+      expect((5.to_bigger_i &+ Int64::MAX)).to eq(Int64::MAX.to_bigger_i &+ 5)
 
-    #     (2 &+ 1.to_big_i).should eq(3.to_big_i)
-    #   end
+      expect((2 &+ 1.to_bigger_i)).to eq(3.to_bigger_i)
+    end
 
-    #   it "subs" do
-    #     (5.to_big_i - 2.to_big_i).should eq(3.to_big_i)
-    #     (5.to_big_i - 2).should eq(3.to_big_i)
-    #     (5.to_big_i - 2_u8).should eq(3.to_big_i)
-    #     (5.to_big_i - (-2_i64)).should eq(7.to_big_i)
-    #     (-5.to_big_i - Int64::MAX).should be < -Int64::MAX.to_big_i
-    #     (-5.to_big_i - Int64::MAX).should eq(-Int64::MAX.to_big_i - 5)
+    it "subs" do
+      expect((5.to_bigger_i - 2.to_bigger_i)).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i - 2)).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i - 2_u8)).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i - (-2_i64))).to eq(7.to_bigger_i)
+      expect((-5.to_bigger_i - Int64::MAX)).to be < -Int64::MAX.to_bigger_i
+      expect((-5.to_bigger_i - Int64::MAX)).to eq(-Int64::MAX.to_bigger_i - 5)
 
-    #     (5 - 1.to_big_i).should eq(4.to_big_i)
-    #     (-5 - 1.to_big_i).should eq(-6.to_big_i)
+      expect((5 - 1.to_bigger_i)).to eq(4.to_bigger_i)
+      expect((-5 - 1.to_bigger_i)).to eq(-6.to_bigger_i)
 
-    #     (5.to_big_i &- 2.to_big_i).should eq(3.to_big_i)
-    #     (5.to_big_i &- 2).should eq(3.to_big_i)
-    #     (5.to_big_i &- 2_u8).should eq(3.to_big_i)
-    #     (5.to_big_i &- (-2_i64)).should eq(7.to_big_i)
-    #     (-5.to_big_i &- Int64::MAX).should be < -Int64::MAX.to_big_i
-    #     (-5.to_big_i &- Int64::MAX).should eq(-Int64::MAX.to_big_i &- 5)
+      expect((5.to_bigger_i &- 2.to_bigger_i)).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i &- 2)).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i &- 2_u8)).to eq(3.to_bigger_i)
+      expect((5.to_bigger_i &- (-2_i64))).to eq(7.to_bigger_i)
+      expect((-5.to_bigger_i &- Int64::MAX)).to be < -Int64::MAX.to_bigger_i
+      expect((-5.to_bigger_i &- Int64::MAX)).to eq(-Int64::MAX.to_bigger_i &- 5)
 
-    #     (5 &- 1.to_big_i).should eq(4.to_big_i)
-    #     (-5 &- 1.to_big_i).should eq(-6.to_big_i)
-    #   end
+      expect((5 &- 1.to_bigger_i)).to eq(4.to_bigger_i)
+      expect((-5 &- 1.to_bigger_i)).to eq(-6.to_bigger_i)
+    end
 
-    #   it "negates" do
-    #     (-(-123.to_big_i)).should eq(123.to_big_i)
-    #   end
+    it "negates" do
+      expect((-(-123.to_bigger_i))).to eq(123.to_bigger_i)
+    end
 
-    #   it "multiplies" do
-    #     (2.to_big_i * 3.to_big_i).should eq(6.to_big_i)
-    #     (2.to_big_i * 3).should eq(6.to_big_i)
-    #     (2.to_big_i * 3_u8).should eq(6.to_big_i)
-    #     (3 * 2.to_big_i).should eq(6.to_big_i)
-    #     (3_u8 * 2.to_big_i).should eq(6.to_big_i)
-    #     (2.to_big_i * Int64::MAX).should eq(2.to_big_i * Int64::MAX.to_big_i)
+    it "multiplies" do
+      expect((2.to_bigger_i * 3.to_bigger_i)).to eq(6.to_bigger_i)
+      expect((2.to_bigger_i * 3)).to eq(6.to_bigger_i)
+      expect((2.to_bigger_i * 3_u8)).to eq(6.to_bigger_i)
+      expect((3 * 2.to_bigger_i)).to eq(6.to_bigger_i)
+      expect((3_u8 * 2.to_bigger_i)).to eq(6.to_bigger_i)
+      expect((2.to_bigger_i * Int64::MAX)).to eq(2.to_bigger_i * Int64::MAX.to_bigger_i)
 
-    #     (2.to_big_i &* 3.to_big_i).should eq(6.to_big_i)
-    #     (2.to_big_i &* 3).should eq(6.to_big_i)
-    #     (2.to_big_i &* 3_u8).should eq(6.to_big_i)
-    #     (3 &* 2.to_big_i).should eq(6.to_big_i)
-    #     (3_u8 &* 2.to_big_i).should eq(6.to_big_i)
-    #     (2.to_big_i &* Int64::MAX).should eq(2.to_big_i &* Int64::MAX.to_big_i)
-    #   end
+      expect((2.to_bigger_i &* 3.to_bigger_i)).to eq(6.to_bigger_i)
+      expect((2.to_bigger_i &* 3)).to eq(6.to_bigger_i)
+      expect((2.to_bigger_i &* 3_u8)).to eq(6.to_bigger_i)
+      expect((3 &* 2.to_bigger_i)).to eq(6.to_bigger_i)
+      expect((3_u8 &* 2.to_bigger_i)).to eq(6.to_bigger_i)
+      expect((2.to_bigger_i &* Int64::MAX)).to eq(2.to_bigger_i &* Int64::MAX.to_bigger_i)
+    end
 
     #   it "gets absolute value" do
     #     (-10.to_big_i.abs).should eq(10.to_big_i)
