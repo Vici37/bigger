@@ -42,7 +42,7 @@ module Bigger
       @digits = temp.digits
     end
 
-    def initialize(inp : ::Int::Primitive | ::Int)
+    def initialize(inp : ::Int)
       @sign = inp >= 0
       inp = inp.abs
       while inp > 0
@@ -53,8 +53,23 @@ module Bigger
       # puts "init from int primitive #{inp}: #{digits}"
     end
 
-    def initialize(inp : ::Float::Primitive | ::Number)
-      initialize(inp.floor.to_i64)
+    def initialize(inp : ::Int::Primitive)
+      @sign = inp >= 0
+      inp = inp.abs
+      while inp > 0
+        @digits << (inp & BaseType::MAX).to_u8
+        inp = inp >> BASE_NUM_BITS
+      end
+      @digits << BASE_ZERO if @digits.empty?
+      # puts "init from int primitive #{inp}: #{digits}"
+    end
+
+    def initialize(inp : ::Number)
+      initialize(inp.floor.to_u128)
+    end
+
+    def initialize(inp : ::Float::Primitive)
+      initialize(inp.floor.to_u128)
     end
 
     def initialize
@@ -107,27 +122,45 @@ module Bigger
     # GMP documentation: https://gmplib.org/manual/Concept-Index
 
     def //(other : Bigger::Int) : Bigger::Int
-      div_and_remainder(self, other)[0]
+      divmod(self, other)[0]
     end
 
-    private def div_and_remainder(first : Bigger::Int, second : Bigger::Int) : Tuple(Bigger::Int, Bigger::Int)
-      return {Bigger::Int.new, first.clone} if second > first
+    private def divmod(first : Bigger::Int, second : Bigger::Int) : Tuple(Bigger::Int, Bigger::Int)
+      return {Bigger::Int.new, first.clone} if second.compare_digits(first) == 1
+      second_abs = second.abs
 
-      temp1 = Bigger::Int.new
-      temp2 = Bigger::Int.new
+      # pp! first.digits, first.positive?, second.digits, second.positive?
+
+      remainder = Bigger::Int.new
+      temp = Bigger::Int.new
       new_digits = Array(BaseType).new(first.digits.size) { BASE_ZERO }
       (first.digits.size - 1).downto(0).each do |i|
-        temp1.digits[0] = first.digits[i]
-        temp2 = Bigger::Int.new(0)
-        while temp1 >= (temp2 + second)
+        remainder.digits[0] = first.digits[i]
+        temp = Bigger::Int.new(0)
+        while remainder >= (temp + second_abs)
+          # pp! remainder.digits, temp.digits, new_digits
           new_digits[i] += 1
-          temp2 += second
+          temp += second_abs
         end
-        temp1 -= temp2
-        temp1 = temp1 << BASE_NUM_BITS
+        remainder -= temp
+        remainder = remainder << BASE_NUM_BITS
       end
-      temp1 = temp1 >> BASE_NUM_BITS
-      {Bigger::Int.new(new_digits), temp1}
+      remainder = remainder >> BASE_NUM_BITS
+      should_be_positive = !(first.positive? ^ second.positive?)
+      quotient = Bigger::Int.new(new_digits, !(first.positive? ^ second.positive?))
+
+      # pp! quotient.digits, remainder.digits
+      if !should_be_positive && remainder > 0
+        quotient -= 1
+        # remainder -= 1 unless second.negative?
+      end
+      remainder = -remainder if second.negative?
+      # puts "Final:"
+      # pp! quotient.digits, quotient.positive?
+      # pp! remainder.digits, (first - (quotient * second)).digits
+      # pp! (quotient * second).digits, (quotient * second).positive?
+      # puts "---------------------------"
+      {quotient, first - (quotient * second)}
     end
 
     def >>(other : Int32) : Bigger::Int
@@ -138,7 +171,7 @@ module Bigger
       other %= BASE_NUM_BITS
 
       return Bigger::Int.new if new_digits.empty?
-      return Bigger::Int.new(new_digits) if other == 0
+      return Bigger::Int.new(new_digits) if other.zero?
 
       new_digits.size.times do |i|
         upper_bits = (i == (new_digits.size - 1) ? BASE_ZERO : (new_digits[i + 1] >> other) << other)
@@ -156,7 +189,7 @@ module Bigger
       new_digits = Array(BaseType).new(digits.size + start_idx) { BASE_ZERO }
       new_digits[start_idx, digits.size] = digits
 
-      return Bigger::Int.new(new_digits) if other == 0
+      return Bigger::Int.new(new_digits) if other.zero?
 
       carry_over = BASE_ZERO
       offset = BASE_NUM_BITS - other
@@ -173,12 +206,12 @@ module Bigger
 
     def +(other : Bigger::Int) : Bigger::Int
       case {positive?, other.positive?}
-      when {true, true}, {false, false} then Bigger::Int.new(sum_two_numbers_of_same_sign(self, other))
+      when {true, true}, {false, false} then Bigger::Int.new(*sum_two_numbers_of_same_sign(self, other))
       else                                   Bigger::Int.new(*subtract_smaller_from_larger(self, other))
       end
     end
 
-    private def sum_two_numbers_of_same_sign(first : Bigger::Int, second : Bigger::Int) : Array(BaseType)
+    private def sum_two_numbers_of_same_sign(first : Bigger::Int, second : Bigger::Int) : Tuple(Array(BaseType), Bool)
       new_digits = Array(BaseType).new({first.digits.size, second.digits.size}.max + 1) { BASE_ZERO }
 
       carry = BASE_ZERO
@@ -191,7 +224,7 @@ module Bigger
         carry = BASE_ZERO + (temp >> BASE_NUM_BITS)
       end
 
-      new_digits
+      {new_digits, first.positive?}
     end
 
     def &+(other : Bigger::Int) : Bigger::Int
@@ -201,8 +234,8 @@ module Bigger
 
     def -(other : Bigger::Int) : Bigger::Int
       case {positive?, other.positive?}
-      when {true, false} then Bigger::Int.new(sum_two_numbers_of_same_sign(self, other))
-      when {false, true} then -Bigger::Int.new(sum_two_numbers_of_same_sign(self, other))
+      when {true, false} then Bigger::Int.new(sum_two_numbers_of_same_sign(self, other)[0])
+      when {false, true} then Bigger::Int.new(sum_two_numbers_of_same_sign(self, other)[0], false)
       else                    Bigger::Int.new(*subtract_smaller_from_larger(self, -other))
       end
     end
@@ -220,7 +253,7 @@ module Bigger
       # end
       # {new_digits, true}
       comp = first.compare_digits(second)
-      return {[BASE_ZERO], true} if comp == 0
+      return {[BASE_ZERO], true} if comp.zero?
 
       larger, smaller, resulting_sign = (comp > 0 ? {first, second, first.positive?} : {second, first, second.positive?})
 
@@ -295,7 +328,7 @@ module Bigger
         prod += temp
       end
       # pp! prod.digits.reverse
-      prod
+      positive? ^ other.positive? ? -prod : prod
     end
 
     def &*(other : Bigger::Int) : Bigger::Int
@@ -303,7 +336,7 @@ module Bigger
     end
 
     def %(other : Bigger::Int) : Bigger::Int
-      div_and_remainder(self, other)[1]
+      divmod(self, other)[1]
     end
 
     macro wrap_in_big_int(operator, *, return_type = "Bigger::Int")
@@ -380,6 +413,12 @@ module Bigger
       return -1 if negative? && other.positive?
 
       compare_digits(other)
+    end
+
+    def <=>(other : ::Float) : Int32
+      ret = (self <=> Bigger::Int.new(other))
+      return ret if ret != 0 || other.ceil == other
+      -1
     end
 
     protected def compare_digits(other : Bigger::Int) : Int32
@@ -523,7 +562,7 @@ module Bigger
     # TODO: add missing to_* methods
 
     def to_s(io : IO, base : ::Int::Primitive = 10) : Nil
-      return io << "0" if digits.size == 1 && digits[0] == 0
+      return io << "0" if digits.size == 1 && digits[0].zero?
       io << '-' unless @sign
       temp = self.abs
       str = [] of Char

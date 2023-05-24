@@ -179,6 +179,18 @@ Spectator.describe Bigger::Int do
       it "123456 * 654321" do
         expect_big_int(123456.to_bigger_i * 654321, 123456u64 * 654321)
       end
+
+      it "-2 * 3" do
+        expect_big_int(-2.to_bigger_i * 3, 6, false)
+      end
+
+      it "2 * -3" do
+        expect_big_int(2.to_bigger_i * -3, 6, false)
+      end
+
+      it "-2 * -3" do
+        expect_big_int(-2.to_bigger_i * -3, 6)
+      end
     end
   end
 
@@ -226,39 +238,39 @@ Spectator.describe Bigger::Int do
       expect([3.to_bigger_i, 2.to_bigger_i, 10.to_bigger_i, 4, 8_u8].sort).to eq([2, 3, 4, 8, 10])
     end
 
-    #   it "compares against float" do
-    #     1.to_big_i.should eq(1.0)
-    #     1.to_big_i.should eq(1.0_f32)
-    #     1.to_big_i.should_not eq(1.1)
-    #     1.0.should eq(1.to_big_i)
-    #     1.0_f32.should eq(1.to_big_i)
-    #     1.1.should_not eq(1.to_big_i)
+    it "compares against float" do
+      expect(1.to_bigger_i).to eq(1.0)
+      expect(1.to_bigger_i).to eq(1.0_f32)
+      expect(1.to_bigger_i).to_not eq(1.1)
+      expect(1.0).to eq(1.to_bigger_i)
+      expect(1.0_f32).to eq(1.to_bigger_i)
+      expect(1.1).to_not eq(1.to_bigger_i)
 
-    #     [1.1, 1.to_big_i, 3.to_big_i, 2.2].sort.should eq([1, 1.1, 2.2, 3])
-    #   end
+      expect([1.1, 1.to_bigger_i, 3.to_bigger_i, 2.2].sort).to eq([1, 1.1, 2.2, 3])
+    end
 
-    #   it "divides and calculates the modulo" do
-    #     11.to_big_i.divmod(3.to_big_i).should eq({3, 2})
-    #     11.to_big_i.divmod(-3.to_big_i).should eq({-4, -1})
+    it "divides and calculates the modulo" do
+      expect(11.to_bigger_i.divmod(3.to_bigger_i)).to eq({3, 2})
+      expect(11.to_bigger_i.divmod(-3.to_bigger_i)).to eq({-4, -1})
 
-    #     11.to_big_i.divmod(3_i32).should eq({3, 2})
-    #     11.to_big_i.divmod(-3_i32).should eq({-4, -1})
+      expect(11.to_bigger_i.divmod(3_i32)).to eq({3, 2})
+      expect(11.to_bigger_i.divmod(-3_i32)).to eq({-4, -1})
 
-    #     10.to_big_i.divmod(2).should eq({5, 0})
-    #     11.to_big_i.divmod(2).should eq({5, 1})
+      expect(10.to_bigger_i.divmod(2)).to eq({5, 0})
+      expect(11.to_bigger_i.divmod(2)).to eq({5, 1})
 
-    #     10.to_big_i.divmod(2.to_big_i).should eq({5, 0})
-    #     11.to_big_i.divmod(2.to_big_i).should eq({5, 1})
+      expect(10.to_bigger_i.divmod(2.to_bigger_i)).to eq({5, 0})
+      expect(11.to_bigger_i.divmod(2.to_bigger_i)).to eq({5, 1})
 
-    #     10.to_big_i.divmod(-2).should eq({-5, 0})
-    #     11.to_big_i.divmod(-2).should eq({-6, -1})
+      expect(10.to_bigger_i.divmod(-2)).to eq({-5, 0})
+      expect(11.to_bigger_i.divmod(-2)).to eq({-6, -1})
 
-    #     -10.to_big_i.divmod(2).should eq({-5, 0})
-    #     -11.to_big_i.divmod(2).should eq({-6, 1})
+      expect(-10.to_bigger_i.divmod(2)).to eq({-5, 0})
+      expect(-11.to_bigger_i.divmod(2)).to eq({-6, 1})
 
-    #     -10.to_big_i.divmod(-2).should eq({5, 0})
-    #     -11.to_big_i.divmod(-2).should eq({5, -1})
-    #   end
+      expect(-10.to_bigger_i.divmod(-2)).to eq({5, 0})
+      expect(-11.to_bigger_i.divmod(-2)).to eq({5, -1})
+    end
 
     #   it "adds" do
     #     (1.to_big_i + 2.to_big_i).should eq(3.to_big_i)
