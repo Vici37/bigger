@@ -375,65 +375,66 @@ Spectator.describe Bigger::Int do
       expect(((Int64::MAX.to_bigger_i * 2.to_bigger_i) // Int64::MAX)).to eq(2.to_bigger_i)
     end
 
-    #   it "divides with negative numbers" do
-    #     (7.to_big_i / 2).should eq(3.5.to_big_f)
-    #     (7.to_big_i / 2.to_big_i).should eq(3.5.to_big_f)
-    #     (7.to_big_i / -2).should eq(-3.5.to_big_f)
-    #     (7.to_big_i / -2.to_big_i).should eq(-3.5.to_big_f)
-    #     (-7.to_big_i / 2).should eq(-3.5.to_big_f)
-    #     (-7.to_big_i / 2.to_big_i).should eq(-3.5.to_big_f)
-    #     (-7.to_big_i / -2).should eq(3.5.to_big_f)
-    #     (-7.to_big_i / -2.to_big_i).should eq(3.5.to_big_f)
+    # TODO: Uncomment when Bigger::Float is implemented
+    # it "divides with negative numbers" do
+    #   expect((7.to_bigger_i / 2)).to eq(3.5.to_bigger_f)
+    #   expect((7.to_bigger_i / 2.to_bigger_i)).to eq(3.5.to_bigger_f)
+    #   expect((7.to_bigger_i / -2)).to eq(-3.5.to_bigger_f)
+    #   expect((7.to_bigger_i / -2.to_bigger_i)).to eq(-3.5.to_bigger_f)
+    #   expect((-7.to_bigger_i / 2)).to eq(-3.5.to_bigger_f)
+    #   expect((-7.to_bigger_i / 2.to_bigger_i)).to eq(-3.5.to_bigger_f)
+    #   expect((-7.to_bigger_i / -2)).to eq(3.5.to_bigger_f)
+    #   expect((-7.to_bigger_i / -2.to_bigger_i)).to eq(3.5.to_bigger_f)
 
-    #     (-6.to_big_i / 2).should eq(-3.to_big_f)
-    #     (6.to_big_i / -2).should eq(-3.to_big_f)
-    #     (-6.to_big_i / -2).should eq(3.to_big_f)
-    #   end
+    #   expect((-6.to_bigger_i / 2)).to eq(-3.to_bigger_f)
+    #   expect((6.to_bigger_i / -2)).to eq(-3.to_bigger_f)
+    #   expect((-6.to_bigger_i / -2)).to eq(3.to_bigger_f)
+    # end
 
-    #   it "divides with negative numbers" do
-    #     (7.to_big_i // 2).should eq(3.to_big_i)
-    #     (7.to_big_i // 2.to_big_i).should eq(3.to_big_i)
-    #     (7.to_big_i // -2).should eq(-4.to_big_i)
-    #     (7.to_big_i // -2.to_big_i).should eq(-4.to_big_i)
-    #     (-7.to_big_i // 2).should eq(-4.to_big_i)
-    #     (-7.to_big_i // 2.to_big_i).should eq(-4.to_big_i)
-    #     (-7.to_big_i // -2).should eq(3.to_big_i)
-    #     (-7.to_big_i // -2.to_big_i).should eq(3.to_big_i)
+    it "divides with negative numbers" do
+      expect((7.to_bigger_i // 2)).to eq(3.to_bigger_i)
+      expect((7.to_bigger_i // 2.to_bigger_i)).to eq(3.to_bigger_i)
+      expect((7.to_bigger_i // -2)).to eq(-4.to_bigger_i)
+      expect((7.to_bigger_i // -2.to_bigger_i)).to eq(-4.to_bigger_i)
+      expect((-7.to_bigger_i // 2)).to eq(-4.to_bigger_i)
+      expect((-7.to_bigger_i // 2.to_bigger_i)).to eq(-4.to_bigger_i)
+      expect((-7.to_bigger_i // -2)).to eq(3.to_bigger_i)
+      expect((-7.to_bigger_i // -2.to_bigger_i)).to eq(3.to_bigger_i)
 
-    #     (-6.to_big_i // 2).should eq(-3.to_big_i)
-    #     (6.to_big_i // -2).should eq(-3.to_big_i)
-    #     (-6.to_big_i // -2).should eq(3.to_big_i)
-    #   end
+      expect((-6.to_bigger_i // 2)).to eq(-3.to_bigger_i)
+      expect((6.to_bigger_i // -2)).to eq(-3.to_bigger_i)
+      expect((-6.to_bigger_i // -2)).to eq(3.to_bigger_i)
+    end
 
-    #   it "tdivs" do
-    #     5.to_big_i.tdiv(3).should eq(1)
-    #     -5.to_big_i.tdiv(3).should eq(-1)
-    #     5.to_big_i.tdiv(-3).should eq(-1)
-    #     -5.to_big_i.tdiv(-3).should eq(1)
-    #   end
+    it "tdivs" do
+      expect(5.to_bigger_i.tdiv(3)).to eq(1)
+      expect(-5.to_bigger_i.tdiv(3)).to eq(-1)
+      expect(5.to_bigger_i.tdiv(-3)).to eq(-1)
+      expect(-5.to_bigger_i.tdiv(-3)).to eq(1)
+    end
 
-    #   it "does modulo" do
-    #     (10.to_big_i % 3.to_big_i).should eq(1.to_big_i)
-    #     (10.to_big_i % 3).should eq(1.to_big_i)
-    #     (10.to_big_i % 3u8).should eq(1.to_big_i)
-    #     (10 % 3.to_big_i).should eq(1.to_big_i)
-    #   end
+    it "does modulo" do
+      expect((10.to_bigger_i % 3.to_bigger_i)).to eq(1.to_bigger_i)
+      expect((10.to_bigger_i % 3)).to eq(1.to_bigger_i)
+      expect((10.to_bigger_i % 3u8)).to eq(1.to_bigger_i)
+      expect((10 % 3.to_bigger_i)).to eq(1.to_bigger_i)
+    end
 
-    #   it "does modulo with negative numbers" do
-    #     (7.to_big_i % 2).should eq(1.to_big_i)
-    #     (7.to_big_i % 2.to_big_i).should eq(1.to_big_i)
-    #     (7.to_big_i % -2).should eq(-1.to_big_i)
-    #     (7.to_big_i % -2.to_big_i).should eq(-1.to_big_i)
-    #     (-7.to_big_i % 2).should eq(1.to_big_i)
-    #     (-7.to_big_i % 2.to_big_i).should eq(1.to_big_i)
-    #     (-7.to_big_i % -2).should eq(-1.to_big_i)
-    #     (-7.to_big_i % -2.to_big_i).should eq(-1.to_big_i)
+    it "does modulo with negative numbers" do
+      expect((7.to_bigger_i % 2)).to eq(1.to_bigger_i)
+      expect((7.to_bigger_i % 2.to_bigger_i)).to eq(1.to_bigger_i)
+      expect((7.to_bigger_i % -2)).to eq(-1.to_bigger_i)
+      expect((7.to_bigger_i % -2.to_bigger_i)).to eq(-1.to_bigger_i)
+      expect((-7.to_bigger_i % 2)).to eq(1.to_bigger_i)
+      expect((-7.to_bigger_i % 2.to_bigger_i)).to eq(1.to_bigger_i)
+      expect((-7.to_bigger_i % -2)).to eq(-1.to_bigger_i)
+      expect((-7.to_bigger_i % -2.to_bigger_i)).to eq(-1.to_bigger_i)
 
-    #     (6.to_big_i % 2).should eq(0.to_big_i)
-    #     (6.to_big_i % -2).should eq(0.to_big_i)
-    #     (-6.to_big_i % 2).should eq(0.to_big_i)
-    #     (-6.to_big_i % -2).should eq(0.to_big_i)
-    #   end
+      expect((6.to_bigger_i % 2)).to eq(0.to_bigger_i)
+      expect((6.to_bigger_i % -2)).to eq(0.to_bigger_i)
+      expect((-6.to_bigger_i % 2)).to eq(0.to_bigger_i)
+      expect((-6.to_bigger_i % -2)).to eq(0.to_bigger_i)
+    end
 
     #   it "does remainder with negative numbers" do
     #     5.to_big_i.remainder(3).should eq(2)

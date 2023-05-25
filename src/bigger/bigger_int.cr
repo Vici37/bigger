@@ -385,9 +385,8 @@ module Bigger
     wrap_in_big_int(gcd)
 
     def tdiv(other : Int) : Bigger::Int
-      # puts "calling tdiv"
-      # TODO: truncated division
-      self
+      quot, remainder = divmod(other)
+      quot < 0 && remainder != 0 ? quot + 1 : quot
     end
 
     def abs : Bigger::Int
