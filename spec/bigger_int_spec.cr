@@ -490,39 +490,39 @@ Spectator.describe Bigger::Int do
       end
     end
 
-    #   it "raises if divides by zero" do
-    #     expect_raises DivisionByZeroError do
-    #       10.to_big_i // 0.to_big_i
-    #     end
+    it "raises if divides by zero" do
+      expect_raises DivisionByZeroError do
+        10.to_bigger_i // 0.to_bigger_i
+      end
 
-    #     expect_raises DivisionByZeroError do
-    #       10.to_big_i // 0
-    #     end
+      expect_raises DivisionByZeroError do
+        10.to_bigger_i // 0
+      end
 
-    #     expect_raises DivisionByZeroError do
-    #       10 // 0.to_big_i
-    #     end
-    #   end
+      expect_raises DivisionByZeroError do
+        10 // 0.to_bigger_i
+      end
+    end
 
-    #   it "raises if mods by zero" do
-    #     expect_raises DivisionByZeroError do
-    #       10.to_big_i % 0.to_big_i
-    #     end
+    it "raises if mods by zero" do
+      expect_raises DivisionByZeroError do
+        10.to_bigger_i % 0.to_bigger_i
+      end
 
-    #     expect_raises DivisionByZeroError do
-    #       10.to_big_i % 0
-    #     end
+      expect_raises DivisionByZeroError do
+        10.to_bigger_i % 0
+      end
 
-    #     expect_raises DivisionByZeroError do
-    #       10 % 0.to_big_i
-    #     end
-    #   end
+      expect_raises DivisionByZeroError do
+        10 % 0.to_bigger_i
+      end
+    end
 
-    #   it "exponentiates" do
-    #     result = (2.to_big_i ** 1000)
-    #     result.should be_a(Bigger::Int)
-    #     result.to_s.should eq("10715086071862673209484250490600018105614048117055336074437503883703510511249361224931983788156958581275946729175531468251871452856923140435984577574698574803934567774824230985421074605062371141877954182153046474983581941267398767559165543946077062914571196477686542167660429831652624386837205668069376")
-    #   end
+    it "exponentiates" do
+      result = (2.to_bigger_i ** 1000)
+      expect(result).to be_a(Bigger::Int)
+      expect(result.to_s).to eq("10715086071862673209484250490600018105614048117055336074437503883703510511249361224931983788156958581275946729175531468251871452856923140435984577574698574803934567774824230985421074605062371141877954182153046474983581941267398767559165543946077062914571196477686542167660429831652624386837205668069376")
+    end
 
     #   describe "#to_s" do
     #     context "base and upcase parameters" do
