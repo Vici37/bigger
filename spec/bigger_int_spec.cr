@@ -436,59 +436,59 @@ Spectator.describe Bigger::Int do
       expect((-6.to_bigger_i % -2)).to eq(0.to_bigger_i)
     end
 
-    #   it "does remainder with negative numbers" do
-    #     5.to_big_i.remainder(3).should eq(2)
-    #     -5.to_big_i.remainder(3).should eq(-2)
-    #     5.to_big_i.remainder(-3).should eq(2)
-    #     -5.to_big_i.remainder(-3).should eq(-2)
-    #   end
+    it "does remainder with negative numbers" do
+      expect(5.to_bigger_i.remainder(3)).to eq(2)
+      expect(-5.to_bigger_i.remainder(3)).to eq(-2)
+      expect(5.to_bigger_i.remainder(-3)).to eq(2)
+      expect(-5.to_bigger_i.remainder(-3)).to eq(-2)
+    end
 
-    #   it "does bitwise and" do
-    #     (123.to_big_i & 321).should eq(65)
-    #     (Bigger::Int.new("96238761238973286532") & 86325735648).should eq(69124358272)
-    #   end
+    it "does bitwise and" do
+      expect((123.to_bigger_i & 321)).to eq(65)
+      expect((Bigger::Int.new("96238761238973286532") & 86325735648)).to eq(69124358272)
+    end
 
-    #   it "does bitwise or" do
-    #     (123.to_big_i | 4).should eq(127)
-    #     (Bigger::Int.new("96238761238986532") | 8632573).should eq(96238761247506429)
-    #   end
+    it "does bitwise or" do
+      expect((123.to_bigger_i | 4)).to eq(127)
+      expect((Bigger::Int.new("96238761238986532") | 8632573)).to eq(96238761247506429)
+    end
 
-    #   it "does bitwise xor" do
-    #     (123.to_big_i ^ 50).should eq(73)
-    #     (Bigger::Int.new("96238761238986532") ^ 8632573).should eq(96238761247393753)
-    #   end
+    it "does bitwise xor" do
+      expect((123.to_bigger_i ^ 50)).to eq(73)
+      expect((Bigger::Int.new("96238761238986532") ^ 8632573)).to eq(96238761247393753)
+    end
 
-    #   it "does bitwise not" do
-    #     (~123).should eq(-124)
+    it "does bitwise not" do
+      expect((~123)).to eq(-124)
 
-    #     a = Bigger::Int.new("192623876123689865327")
-    #     b = Bigger::Int.new("-192623876123689865328")
-    #     (~a).should eq(b)
-    #   end
+      a = Bigger::Int.new("192623876123689865327")
+      b = Bigger::Int.new("-192623876123689865328")
+      expect((~a)).to eq(b)
+    end
 
-    #   it "does bitwise right shift" do
-    #     (123.to_big_i >> 4).should eq(7)
-    #     (123456.to_big_i >> 8).should eq(482)
-    #   end
+    it "does bitwise right shift" do
+      expect((123.to_bigger_i >> 4)).to eq(7)
+      expect((123456.to_bigger_i >> 8)).to eq(482)
+    end
 
-    #   it "does bitwise left shift" do
-    #     (123.to_big_i << 4).should eq(1968)
-    #     (123456.to_big_i << 8).should eq(31604736)
-    #   end
+    it "does bitwise left shift" do
+      expect((123.to_bigger_i << 4)).to eq(1968)
+      expect((123456.to_bigger_i << 8)).to eq(31604736)
+    end
 
-    #   it "raises if divides by zero" do
-    #     expect_raises DivisionByZeroError do
-    #       10.to_big_i / 0.to_big_i
-    #     end
+    it "raises if divides by zero" do
+      expect_raises DivisionByZeroError do
+        10.to_bigger_i / 0.to_bigger_i
+      end
 
-    #     expect_raises DivisionByZeroError do
-    #       10.to_big_i / 0
-    #     end
+      expect_raises DivisionByZeroError do
+        10.to_bigger_i / 0
+      end
 
-    #     expect_raises DivisionByZeroError do
-    #       10 / 0.to_big_i
-    #     end
-    #   end
+      expect_raises DivisionByZeroError do
+        10 / 0.to_bigger_i
+      end
+    end
 
     #   it "raises if divides by zero" do
     #     expect_raises DivisionByZeroError do

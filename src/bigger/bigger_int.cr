@@ -131,6 +131,7 @@ module Bigger
 
     private def divmod(first : Bigger::Int, second : Bigger::Int) : Tuple(Bigger::Int, Bigger::Int)
       return {Bigger::Int.new, first.clone} if second.compare_digits(first) == 1
+      raise DivisionByZeroError.new if second.zero?
       second_abs = second.abs
 
       # pp! first.digits, first.positive?, second.digits, second.positive?
@@ -187,11 +188,11 @@ module Bigger
 
     def <<(other : Int32) : Bigger::Int
       return self >> -other if other < 0
-      # puts "calling <<"
       start_idx = other // BASE_NUM_BITS
       other %= BASE_NUM_BITS
       new_digits = Array(BaseType).new(digits.size + start_idx) { BASE_ZERO }
       new_digits[start_idx, digits.size] = digits
+      # pp! start_idx, other, new_digits, new_digits.map(&.to_s(2))
 
       return Bigger::Int.new(new_digits) if other.zero?
 
@@ -200,10 +201,14 @@ module Bigger
       new_digits << BASE_ZERO
 
       start_idx.upto(digits.size + start_idx - 1).each do |i|
+        # pp! i, new_digits, new_digits.map(&.to_s(2))
         temp = digits[i - start_idx] >> offset
         new_digits[i] = (digits[i - start_idx] << other) + carry_over
         carry_over = temp
       end
+      new_digits[-1] = carry_over
+      # puts "Final"
+      # pp! new_digits, new_digits.map(&.to_s(2))
 
       Bigger::Int.new(new_digits)
     end
@@ -273,6 +278,11 @@ module Bigger
       {new_digits, resulting_sign}
     end
 
+    def ~ : Bigger::Int
+      # TODO: this does two memory allocations
+      positive? ? -(self + 1) : -(self - 1)
+    end
+
     def - : Bigger::Int
       Bigger::Int.new(digits.dup, !@sign)
     end
@@ -281,31 +291,30 @@ module Bigger
       self - other
     end
 
+    macro bitwise_operator(op)
+      def {{op.id}}(other : Bigger::Int) : Bigger::Int
+        new_digits = new_digits_of(other)
+        new_digits.size.times do |dig|
+          new_digits[dig] = (digits[dig]? || BASE_ZERO) {{op.id}} (other.digits[dig]? || BASE_ZERO)
+        end
+        Bigger::Int.new(new_digits)
+      end
+    end
+
+    bitwise_operator("^")
+    bitwise_operator("|")
+    bitwise_operator("&")
+
     def ^(other : Bigger::Int) : Bigger::Int
-      # puts "calling ^"
       new_digits = new_digits_of(other)
       new_digits.size.times do |dig|
-        new_digits[dig] = (digits[dig]? || BASE_ZERO) ^ (digits[dig]? || BASE_ZERO)
+        new_digits[dig] = (digits[dig]? || BASE_ZERO) ^ (other.digits[dig]? || BASE_ZERO)
       end
       Bigger::Int.new(new_digits)
     end
 
     def /(other : Bigger::Int) : Bigger::Int
-      # puts "calling /"
-      # TODO: should be bigger float
       self // other
-    end
-
-    def &(other : Bigger::Int) : Bigger::Int
-      # puts "calling &"
-      # TODO
-      self
-    end
-
-    def |(other : Bigger::Int) : Bigger::Int
-      # puts "calling |"
-      # TODO
-      self
     end
 
     def *(other : Bigger::Int) : Bigger::Int
@@ -396,9 +405,8 @@ module Bigger
     wrap_in_big_int(tdiv)
 
     def remainder(other : Bigger::Int) : Bigger::Int
-      # puts "calling remainder"
-      # TODO: remainder after division (unsafe_truncated_mod from bigger_int)
-      self
+      _, rem = abs.divmod(other.abs)
+      negative? ? -rem : rem
     end
 
     wrap_in_big_int(remainder)
@@ -571,7 +579,7 @@ module Bigger
     def inspect(io : IO) : Nil
       io << (positive? ? "+" : "-")
       io << "["
-      digits.each_with_index { |d, i| io << d.to_s.rjust(3); io << ", " unless i == (digits.size - 1) }
+      digits.reverse.each_with_index { |d, i| io << d.to_s.rjust(3); io << ", " unless i == (digits.size - 1) }
       io << "]"
       io << "("
       to_s(io)
