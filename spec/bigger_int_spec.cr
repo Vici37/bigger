@@ -277,7 +277,7 @@ Spectator.describe Bigger::Int do
       expect((1.to_bigger_i + 2)).to eq(3.to_bigger_i)
       expect((1.to_bigger_i + 2_u8)).to eq(3.to_bigger_i)
       expect((5.to_bigger_i + (-2_i64))).to eq(3.to_bigger_i)
-      expect((5.to_bigger_i + Int64::MAX)).to be > Int64::MAX.to_bigger_i
+      expect((5.to_bigger_i + Int64::MAX)).to be_gt Int64::MAX.to_bigger_i
       expect((5.to_bigger_i + Int64::MAX)).to eq(Int64::MAX.to_bigger_i + 5)
 
       expect((2 + 1.to_bigger_i)).to eq(3.to_bigger_i)
@@ -286,7 +286,7 @@ Spectator.describe Bigger::Int do
       expect((1.to_bigger_i &+ 2)).to eq(3.to_bigger_i)
       expect((1.to_bigger_i &+ 2_u8)).to eq(3.to_bigger_i)
       expect((5.to_bigger_i &+ (-2_i64))).to eq(3.to_bigger_i)
-      expect((5.to_bigger_i &+ Int64::MAX)).to be > Int64::MAX.to_bigger_i
+      expect((5.to_bigger_i &+ Int64::MAX)).to be_gt Int64::MAX.to_bigger_i
       expect((5.to_bigger_i &+ Int64::MAX)).to eq(Int64::MAX.to_bigger_i &+ 5)
 
       expect((2 &+ 1.to_bigger_i)).to eq(3.to_bigger_i)
@@ -297,7 +297,7 @@ Spectator.describe Bigger::Int do
       expect((5.to_bigger_i - 2)).to eq(3.to_bigger_i)
       expect((5.to_bigger_i - 2_u8)).to eq(3.to_bigger_i)
       expect((5.to_bigger_i - (-2_i64))).to eq(7.to_bigger_i)
-      expect((-5.to_bigger_i - Int64::MAX)).to be < -Int64::MAX.to_bigger_i
+      expect((-5.to_bigger_i - Int64::MAX)).to be_lt -Int64::MAX.to_bigger_i
       expect((-5.to_bigger_i - Int64::MAX)).to eq(-Int64::MAX.to_bigger_i - 5)
 
       expect((5 - 1.to_bigger_i)).to eq(4.to_bigger_i)
@@ -307,7 +307,7 @@ Spectator.describe Bigger::Int do
       expect((5.to_bigger_i &- 2)).to eq(3.to_bigger_i)
       expect((5.to_bigger_i &- 2_u8)).to eq(3.to_bigger_i)
       expect((5.to_bigger_i &- (-2_i64))).to eq(7.to_bigger_i)
-      expect((-5.to_bigger_i &- Int64::MAX)).to be < -Int64::MAX.to_bigger_i
+      expect((-5.to_bigger_i &- Int64::MAX)).to be_lt -Int64::MAX.to_bigger_i
       expect((-5.to_bigger_i &- Int64::MAX)).to eq(-Int64::MAX.to_bigger_i &- 5)
 
       expect((5 &- 1.to_bigger_i)).to eq(4.to_bigger_i)
@@ -334,46 +334,46 @@ Spectator.describe Bigger::Int do
       expect((2.to_bigger_i &* Int64::MAX)).to eq(2.to_bigger_i &* Int64::MAX.to_bigger_i)
     end
 
-    #   it "gets absolute value" do
-    #     (-10.to_big_i.abs).should eq(10.to_big_i)
-    #   end
+    it "gets absolute value" do
+      expect((-10.to_bigger_i.abs)).to eq(10.to_bigger_i)
+    end
 
-    #   it "gets factorial value" do
-    #     0.to_big_i.factorial.should eq(1.to_big_i)
-    #     5.to_big_i.factorial.should eq(120.to_big_i)
-    #     100.to_big_i.factorial.should eq("93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000".to_big_i)
-    #   end
+    it "gets factorial value" do
+      expect(0.to_bigger_i.factorial).to eq(1.to_bigger_i)
+      expect(5.to_bigger_i.factorial).to eq(120.to_bigger_i)
+      expect(100.to_bigger_i.factorial).to eq("93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000".to_bigger_i)
+    end
 
-    #   it "raises if factorial of negative" do
-    #     expect_raises ArgumentError do
-    #       -1.to_big_i.factorial
-    #     end
+    it "raises if factorial of negative" do
+      expect_raises ArgumentError do
+        -1.to_bigger_i.factorial
+      end
 
-    #     expect_raises ArgumentError do
-    #       "-93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000".to_big_i.factorial
-    #     end
-    #   end
+      expect_raises ArgumentError do
+        "-93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000".to_bigger_i.factorial
+      end
+    end
 
-    #   it "raises if factorial of 2^64" do
-    #     expect_raises ArgumentError do
-    #       # (2.to_big_i ** 64 + 1).factorial
-    #       (LibC::ULong::MAX.to_big_i + 1).factorial
-    #     end
-    #   end
+    it "raises if factorial of 2^64" do
+      expect_raises ArgumentError do
+        # (2.to_bigger_i ** 64 + 1).factorial
+        (LibC::ULong::MAX.to_bigger_i + 1).factorial
+      end
+    end
 
-    #   it "divides" do
-    #     (10.to_big_i / 3.to_big_i).should be_close(3.3333.to_big_f, 0.0001)
-    #     (10.to_big_i / 3).should be_close(3.3333.to_big_f, 0.0001)
-    #     (10 / 3.to_big_i).should be_close(3.3333.to_big_f, 0.0001)
-    #     ((Int64::MAX.to_big_i * 2.to_big_i) / Int64::MAX).should eq(2.to_big_i)
-    #   end
+    it "divides" do
+      expect((10.to_bigger_i / 3.to_bigger_i)).to be_close(3.3333.to_big_f, 0.0001)
+      expect((10.to_bigger_i / 3)).to be_close(3.3333.to_big_f, 0.0001)
+      expect((10 / 3.to_bigger_i)).to be_close(3.3333.to_big_f, 0.0001)
+      expect(((Int64::MAX.to_bigger_i * 2.to_bigger_i) / Int64::MAX)).to eq(2.to_bigger_i)
+    end
 
-    #   it "divides" do
-    #     (10.to_big_i // 3.to_big_i).should eq(3.to_big_i)
-    #     (10.to_big_i // 3).should eq(3.to_big_i)
-    #     (10 // 3.to_big_i).should eq(3.to_big_i)
-    #     ((Int64::MAX.to_big_i * 2.to_big_i) // Int64::MAX).should eq(2.to_big_i)
-    #   end
+    it "divides" do
+      expect((10.to_bigger_i // 3.to_bigger_i)).to eq(3.to_bigger_i)
+      expect((10.to_bigger_i // 3)).to eq(3.to_bigger_i)
+      expect((10 // 3.to_bigger_i)).to eq(3.to_bigger_i)
+      expect(((Int64::MAX.to_bigger_i * 2.to_bigger_i) // Int64::MAX)).to eq(2.to_bigger_i)
+    end
 
     #   it "divides with negative numbers" do
     #     (7.to_big_i / 2).should eq(3.5.to_big_f)

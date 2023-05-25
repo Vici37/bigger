@@ -106,9 +106,13 @@ module Bigger
     end
 
     def factorial : Bigger::Int
-      # puts "factorial"
-      # TODO
-      self
+      raise ArgumentError.new("Factorial not defined for negative values") if negative?
+      raise ArgumentError.new("Factorial not supported for numbers bigger than 2^64") if self > LibC::ULong::MAX
+      ret = 1.to_bigger_i
+      self.downto(1).each do |i|
+        ret *= i
+      end
+      ret
     end
 
     def clone : Bigger::Int

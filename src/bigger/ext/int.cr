@@ -43,15 +43,15 @@ struct {{type.id}}
 
   def /(other : Bigger::Int) : Bigger::Int
     # TODO: should be bigger float as a return
-    to_big_i / other
+    to_bigger_i / other
   end
 
   def %(other : Bigger::Int) : Bigger::Int
-    to_big_i % other
+    to_bigger_i % other
   end
 
   def gcd(other : Bigger::Int) : Bigger::Int
-    to_big_i.gcd(other)
+    to_bigger_i.gcd(other)
   end
 
 
