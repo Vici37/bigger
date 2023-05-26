@@ -317,6 +317,12 @@ module Bigger
       self // other
     end
 
+    # TODO
+    # def **(other : Bigger::Int) : Bigger::Int
+    # end
+
+    # wrap_in_big_int("**")
+
     def *(other : Bigger::Int) : Bigger::Int
       prod = Bigger::Int.new
       # pp! digits, other.digits

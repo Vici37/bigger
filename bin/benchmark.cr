@@ -15,38 +15,35 @@ b_big = b.to_big_i
 a_bigger = a.to_bigger_i
 b_bigger = b.to_bigger_i
 
-Benchmark.ips do |rec|
-  rec.report("   Bigger addition") { a_bigger + b_bigger }
-  rec.report("Big addition") { a_big + b_big }
+macro benchmark(op, *, reverse = false)
+  Benchmark.ips do |rec|
+    {% if reverse %}
+    rec.report("Bigger (a {{op.id}} b)") { a_bigger.{{op.id}}(b_bigger) }
+    rec.report("   Big (a {{op.id}} b)") { a_big.{{op.id}}(b_big) }
+    rec.report("Bigger (b {{op.id}} b)") { b_bigger.{{op.id}}(a_bigger) }
+    rec.report("   Big (b {{op.id}} b)") { b_big.{{op.id}}(a_big) }
+    {% else %}
+    rec.report("Bigger {{op.id}}") { a_bigger.{{op.id}}(b_bigger) }
+    rec.report("   Big {{op.id}}") { a_big.{{op.id}}(b_big) }
+    {% end %}
+  end
+  puts
 end
-puts
 
-Benchmark.ips do |rec|
-  rec.report("Bigger subtraction") { a_bigger - b_bigger }
-  rec.report("Big subtraction") { a_big - b_big }
+macro benchmark_unary(op)
+  Benchmark.ips do |rec|
+    rec.report("Bigger unary {{op.id}}") { a_bigger.{{op.id}} }
+    rec.report("   Big unary {{op.id}}") { a_big.{{op.id}} }
+  end
+  puts
 end
-puts
 
-Benchmark.ips do |rec|
-  rec.report("Bigger division (b // a)") { b_bigger // a_bigger }
-  rec.report("Big division (b // a)") { b_big // a_big }
-
-  rec.report("Bigger division (a // b)") { a_bigger // b_bigger }
-  rec.report("Big division (a // b)") { a_big // b_big }
-end
-puts
-
-Benchmark.ips do |rec|
-  rec.report("Bigger modulus (b % a)") { b_bigger % a_bigger }
-  rec.report("Big modulus (b % a)") { b_big % a_big }
-
-  rec.report("Bigger modulus (b % a)") { a_bigger % b_bigger }
-  rec.report("Big modulus (b % a)") { a_big % b_big }
-end
-puts
-
-Benchmark.ips do |rec|
-  rec.report("Bigger mutliplication") { a_bigger * b_bigger }
-  rec.report("Big mutliplication") { a_big * b_big }
-end
-puts
+benchmark("+")
+benchmark("-")
+benchmark("//", reverse: true)
+benchmark("%")
+benchmark("*")
+benchmark("tdiv")
+benchmark("remainder")
+benchmark_unary("~")
+benchmark_unary("!")
