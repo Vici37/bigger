@@ -16,12 +16,18 @@ a_bigger = a.to_bigger_i
 b_bigger = b.to_bigger_i
 
 macro benchmark(op, *, reverse = false)
+  bytes_before_measure = GC.stats.total_bytes
+  a_bigger.{{op.id}}(b_bigger)
+  puts "Bigger {{op.id}} memory: #{GC.stats.total_bytes - bytes_before_measure}"
+  bytes_before_measure = GC.stats.total_bytes
+  a_big.{{op.id}}(b_big)
+  puts "   Big {{op.id}} memory: #{GC.stats.total_bytes - bytes_before_measure}"
   Benchmark.ips do |rec|
     {% if reverse %}
     rec.report("Bigger (a {{op.id}} b)") { a_bigger.{{op.id}}(b_bigger) }
     rec.report("   Big (a {{op.id}} b)") { a_big.{{op.id}}(b_big) }
-    rec.report("Bigger (b {{op.id}} b)") { b_bigger.{{op.id}}(a_bigger) }
-    rec.report("   Big (b {{op.id}} b)") { b_big.{{op.id}}(a_big) }
+    rec.report("Bigger (b {{op.id}} a)") { b_bigger.{{op.id}}(a_bigger) }
+    rec.report("   Big (b {{op.id}} a)") { b_big.{{op.id}}(a_big) }
     {% else %}
     rec.report("Bigger {{op.id}}") { a_bigger.{{op.id}}(b_bigger) }
     rec.report("   Big {{op.id}}") { a_big.{{op.id}}(b_big) }
