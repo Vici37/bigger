@@ -17,7 +17,8 @@ Spectator.describe Bigger::Int do
         .chars
         .each_slice(Bigger::Int::BASE_NUM_BITS)
         .to_a
-        .map(&.reverse.join.to_u8(2))
+        .map(&.reverse.join)
+        .map { |d| Bigger::Int.to_basetype(d, args: 2) }
     end
 
     macro expect_big_int(b, num, positive = true)
@@ -643,9 +644,9 @@ Spectator.describe Bigger::Int do
     #   #   a.to_big_f.should eq(BigFloat.new("1234567890123456789.0"))
     #   # end
 
-    #   describe "#inspect" do
-    #     it { "2".to_big_i.inspect.should eq("2") }
-    #   end
+    it "inspects" do
+      expect(2.to_bigger_i.inspect).to eq "+[  2](2)"
+    end
 
     #   it "does gcd and lcm" do
     #     # 3 primes

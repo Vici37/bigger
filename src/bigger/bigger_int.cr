@@ -1,12 +1,26 @@
 module Bigger
   struct Int < ::Int
-    # if you change these, don't forget to update .to_u8 to appropriate method
-    alias BaseType = UInt8
-    alias HigherBufferType = UInt16
-    BASE_ONE = 1u8
-    # alias BaseType = UInt32
-    # alias HigherBufferType = UInt64
-    # BASE_ONE      = 1u32
+    # This block causes digits to be UInt8, which limits the size bigger ints, but makes testsing contrived cases easier.
+    # alias BaseType = UInt8
+    # alias HigherBufferType = UInt16
+    # BASE_ONE = 1u8
+
+    # macro to_basetype(whatever, *, args = nil)
+    #   ({{whatever.id}}).to_u8{% if args %}({{args}}){% end %}
+    # end
+
+    # This block is more for "production" (real) use of this library, increasing the size of bigger nums, and a good per boost.
+    # TODO: look into using UInt64 instead of UInt32 for digits?
+    alias BaseType = UInt32
+    alias HigherBufferType = UInt64
+    BASE_ONE = 1u32
+
+    macro to_basetype(whatever, *, args = nil)
+      ({{whatever.id}}).to_u32{% if args %}({{args}}){% end %}
+    end
+
+    # ONLY ONE OF THE TWO ABOVE BLOCKS SHOULD BE UNCOMMENTED, BUT AT LEAST ONE OF THEM NEEDS TO BE
+
     BASE_NUM_BITS = sizeof(BaseType) * 8
     BASE          = 2u64**BASE_NUM_BITS
     BASE_ZERO     = BaseType.zero
@@ -49,7 +63,7 @@ module Bigger
       @sign = inp >= 0
       inp = inp.abs
       while inp > 0
-        @digits << (inp & BaseType::MAX).to_u8
+        @digits << to_basetype(inp & BaseType::MAX)
         inp = inp >> BASE_NUM_BITS
       end
       @digits << BASE_ZERO if @digits.empty?
@@ -60,7 +74,7 @@ module Bigger
       @sign = inp >= 0
       inp = inp.abs
       while inp > 0
-        @digits << (inp & BaseType::MAX).to_u8
+        @digits << to_basetype(inp & BaseType::MAX)
         inp = inp >> BASE_NUM_BITS
       end
       @digits << BASE_ZERO if @digits.empty?
