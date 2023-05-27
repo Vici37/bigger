@@ -49,6 +49,10 @@ Spectator.describe Bigger::Int do
       it "initializes from longer string (12345678)" do
         expect_big_int(Bigger::Int.new("12345678"), 12345678)
       end
+
+      it "initializes from 2**16 - 1" do
+        expect((2.to_bigger_i ** 16 - 1).to_s(2, precision: 15)).to eq("1" * 16)
+      end
     end
 
     context "for addition, it" do
@@ -113,7 +117,7 @@ Spectator.describe Bigger::Int do
       end
 
       it "shifts left #{Bigger::Int::BASE_NUM_BITS}" do
-        expect_big_int(15.to_bigger_i << Bigger::Int::BASE_NUM_BITS, 15 << Bigger::Int::BASE_NUM_BITS)
+        expect_big_int(15.to_bigger_i << Bigger::Int::BASE_NUM_BITS, 15u64 << Bigger::Int::BASE_NUM_BITS)
       end
 
       it "shifts right 1" do
@@ -524,103 +528,114 @@ Spectator.describe Bigger::Int do
       expect(result.to_s).to eq("10715086071862673209484250490600018105614048117055336074437503883703510511249361224931983788156958581275946729175531468251871452856923140435984577574698574803934567774824230985421074605062371141877954182153046474983581941267398767559165543946077062914571196477686542167660429831652624386837205668069376")
     end
 
-    #   describe "#to_s" do
-    #     context "base and upcase parameters" do
-    #       a = Bigger::Int.new("1234567890123456789")
-    #       it_converts_to_s a, "1000100100010000100001111010001111101111010011000000100010101", base: 2
-    #       it_converts_to_s a, "112210f47de98115", base: 16
-    #       it_converts_to_s a, "112210F47DE98115", base: 16, upcase: true
-    #       it_converts_to_s a, "128gguhuuj08l", base: 32
-    #       it_converts_to_s a, "128GGUHUUJ08L", base: 32, upcase: true
-    #       it_converts_to_s a, "1tckI1NfUnH", base: 62
+    describe "#to_s" do
+      private macro it_converts_to_s(num, str, **opts)
+        it {{ "converts #{num} to #{str}" }} do
+          num = {{ num }}
+          str = {{ str }}
+          expect(num.to_s({{ opts.double_splat }})).to eq(str)
+          expect(String.build { |io| num.to_s(io, {{ opts.double_splat }}) }).to eq(str)
+        end
+      end
 
-    #       # ensure case is same as for primitive integers
-    #       it_converts_to_s 10.to_big_i, 10.to_s(62), base: 62
+      context "base and upcase parameters" do
+        let(a) { Bigger::Int.new("1234567890123456789") }
+        it_converts_to_s a, "1000100100010000100001111010001111101111010011000000100010101", base: 2
+        it_converts_to_s a, "112210f47de98115", base: 16
+        it_converts_to_s a, "112210F47DE98115", base: 16, upcase: true
+        it_converts_to_s a, "128gguhuuj08l", base: 32
+        it_converts_to_s a, "128GGUHUUJ08L", base: 32, upcase: true
+        it_converts_to_s a, "1tckI1NfUnH", base: 62
 
-    #       it_converts_to_s (-a), "-1000100100010000100001111010001111101111010011000000100010101", base: 2
-    #       it_converts_to_s (-a), "-112210f47de98115", base: 16
-    #       it_converts_to_s (-a), "-112210F47DE98115", base: 16, upcase: true
-    #       it_converts_to_s (-a), "-128gguhuuj08l", base: 32
-    #       it_converts_to_s (-a), "-128GGUHUUJ08L", base: 32, upcase: true
-    #       it_converts_to_s (-a), "-1tckI1NfUnH", base: 62
+        # ensure case is same as for primitive integers
+        it_converts_to_s 10.to_bigger_i, 10.to_s(62), base: 62
 
-    #       it_converts_to_s 16.to_big_i ** 1000, "1#{"0" * 1000}", base: 16
+        it_converts_to_s (-a), "-1000100100010000100001111010001111101111010011000000100010101", base: 2
+        it_converts_to_s (-a), "-112210f47de98115", base: 16
+        it_converts_to_s (-a), "-112210F47DE98115", base: 16, upcase: true
+        it_converts_to_s (-a), "-128gguhuuj08l", base: 32
+        it_converts_to_s (-a), "-128GGUHUUJ08L", base: 32, upcase: true
+        it_converts_to_s (-a), "-1tckI1NfUnH", base: 62
 
-    #       it "raises on base 1" do
-    #         expect_raises(ArgumentError, "Invalid base 1") { a.to_s(1) }
-    #         expect_raises(ArgumentError, "Invalid base 1") { a.to_s(IO::Memory.new, 1) }
-    #       end
+        # Leftshift is faster than exponentiation
+        # Originally 16 ** 1000 == (2 ** 4) ** 1000 == 2 ** 4000 == 2 << 3999
+        it_converts_to_s 2.to_bigger_i << 3999, "1#{"0" * 1000}", base: 16
 
-    #       it "raises on base 37" do
-    #         expect_raises(ArgumentError, "Invalid base 37") { a.to_s(37) }
-    #         expect_raises(ArgumentError, "Invalid base 37") { a.to_s(IO::Memory.new, 37) }
-    #       end
+        it "raises on base 1" do
+          expect_raises(ArgumentError, "Invalid base 1") { a.to_s(1) }
+          expect_raises(ArgumentError, "Invalid base 1") { a.to_s(IO::Memory.new, 1) }
+        end
 
-    #       it "raises on base 62 with upcase" do
-    #         expect_raises(ArgumentError, "upcase must be false for base 62") { a.to_s(62, upcase: true) }
-    #         expect_raises(ArgumentError, "upcase must be false for base 62") { a.to_s(IO::Memory.new, 62, upcase: true) }
-    #       end
-    #     end
+        it "raises on base 37" do
+          expect_raises(ArgumentError, "Invalid base 37") { a.to_s(37) }
+          expect_raises(ArgumentError, "Invalid base 37") { a.to_s(IO::Memory.new, 37) }
+        end
 
-    #     context "precision parameter" do
-    #       it_converts_to_s 0.to_big_i, "", precision: 0
-    #       it_converts_to_s 0.to_big_i, "0", precision: 1
-    #       it_converts_to_s 0.to_big_i, "00", precision: 2
-    #       it_converts_to_s 0.to_big_i, "00000", precision: 5
-    #       it_converts_to_s 0.to_big_i, "0" * 200, precision: 200
+        it "raises on base 62 with upcase" do
+          expect_raises(ArgumentError, "upcase must be false for base 62") { a.to_s(62, upcase: true) }
+          expect_raises(ArgumentError, "upcase must be false for base 62") { a.to_s(IO::Memory.new, 62, upcase: true) }
+        end
+      end
 
-    #       it_converts_to_s 1.to_big_i, "1", precision: 0
-    #       it_converts_to_s 1.to_big_i, "1", precision: 1
-    #       it_converts_to_s 1.to_big_i, "01", precision: 2
-    #       it_converts_to_s 1.to_big_i, "00001", precision: 5
-    #       it_converts_to_s 1.to_big_i, "#{"0" * 199}1", precision: 200
+      context "precision parameter" do
+        it_converts_to_s 0.to_bigger_i, "", precision: 0
+        it_converts_to_s 0.to_bigger_i, "0", precision: 1
+        it_converts_to_s 0.to_bigger_i, "00", precision: 2
+        it_converts_to_s 0.to_bigger_i, "00000", precision: 5
+        it_converts_to_s 0.to_bigger_i, "0" * 200, precision: 200
 
-    #       it_converts_to_s 2.to_big_i, "2", precision: 0
-    #       it_converts_to_s 2.to_big_i, "2", precision: 1
-    #       it_converts_to_s 2.to_big_i, "02", precision: 2
-    #       it_converts_to_s 2.to_big_i, "00002", precision: 5
-    #       it_converts_to_s 2.to_big_i, "#{"0" * 199}2", precision: 200
+        it_converts_to_s 1.to_bigger_i, "1", precision: 0
+        it_converts_to_s 1.to_bigger_i, "1", precision: 1
+        it_converts_to_s 1.to_bigger_i, "01", precision: 2
+        it_converts_to_s 1.to_bigger_i, "00001", precision: 5
+        it_converts_to_s 1.to_bigger_i, "#{"0" * 199}1", precision: 200
 
-    #       it_converts_to_s (-1).to_big_i, "-1", precision: 0
-    #       it_converts_to_s (-1).to_big_i, "-1", precision: 1
-    #       it_converts_to_s (-1).to_big_i, "-01", precision: 2
-    #       it_converts_to_s (-1).to_big_i, "-00001", precision: 5
-    #       it_converts_to_s (-1).to_big_i, "-#{"0" * 199}1", precision: 200
+        it_converts_to_s 2.to_bigger_i, "2", precision: 0
+        it_converts_to_s 2.to_bigger_i, "2", precision: 1
+        it_converts_to_s 2.to_bigger_i, "02", precision: 2
+        it_converts_to_s 2.to_bigger_i, "00002", precision: 5
+        it_converts_to_s 2.to_bigger_i, "#{"0" * 199}2", precision: 200
 
-    #       it_converts_to_s 85.to_big_i, "85", precision: 0
-    #       it_converts_to_s 85.to_big_i, "85", precision: 1
-    #       it_converts_to_s 85.to_big_i, "85", precision: 2
-    #       it_converts_to_s 85.to_big_i, "085", precision: 3
-    #       it_converts_to_s 85.to_big_i, "0085", precision: 4
-    #       it_converts_to_s 85.to_big_i, "00085", precision: 5
-    #       it_converts_to_s 85.to_big_i, "#{"0" * 198}85", precision: 200
+        it_converts_to_s (-1).to_bigger_i, "-1", precision: 0
+        it_converts_to_s (-1).to_bigger_i, "-1", precision: 1
+        it_converts_to_s (-1).to_bigger_i, "-01", precision: 2
+        it_converts_to_s (-1).to_bigger_i, "-00001", precision: 5
+        it_converts_to_s (-1).to_bigger_i, "-#{"0" * 199}1", precision: 200
 
-    #       it_converts_to_s (-85).to_big_i, "-85", precision: 0
-    #       it_converts_to_s (-85).to_big_i, "-85", precision: 1
-    #       it_converts_to_s (-85).to_big_i, "-85", precision: 2
-    #       it_converts_to_s (-85).to_big_i, "-085", precision: 3
-    #       it_converts_to_s (-85).to_big_i, "-0085", precision: 4
-    #       it_converts_to_s (-85).to_big_i, "-00085", precision: 5
-    #       it_converts_to_s (-85).to_big_i, "-#{"0" * 198}85", precision: 200
+        it_converts_to_s 85.to_bigger_i, "85", precision: 0
+        it_converts_to_s 85.to_bigger_i, "85", precision: 1
+        it_converts_to_s 85.to_bigger_i, "85", precision: 2
+        it_converts_to_s 85.to_bigger_i, "085", precision: 3
+        it_converts_to_s 85.to_bigger_i, "0085", precision: 4
+        it_converts_to_s 85.to_bigger_i, "00085", precision: 5
+        it_converts_to_s 85.to_bigger_i, "#{"0" * 198}85", precision: 200
 
-    #       it_converts_to_s 123.to_big_i, "123", precision: 0
-    #       it_converts_to_s 123.to_big_i, "123", precision: 1
-    #       it_converts_to_s 123.to_big_i, "123", precision: 2
-    #       it_converts_to_s 123.to_big_i, "00123", precision: 5
-    #       it_converts_to_s 123.to_big_i, "#{"0" * 197}123", precision: 200
+        it_converts_to_s (-85).to_bigger_i, "-85", precision: 0
+        it_converts_to_s (-85).to_bigger_i, "-85", precision: 1
+        it_converts_to_s (-85).to_bigger_i, "-85", precision: 2
+        it_converts_to_s (-85).to_bigger_i, "-085", precision: 3
+        it_converts_to_s (-85).to_bigger_i, "-0085", precision: 4
+        it_converts_to_s (-85).to_bigger_i, "-00085", precision: 5
+        it_converts_to_s (-85).to_bigger_i, "-#{"0" * 198}85", precision: 200
 
-    #       a = 2.to_big_i ** 1024 - 1
-    #       it_converts_to_s a, "#{"1" * 1024}", base: 2, precision: 1023
-    #       it_converts_to_s a, "#{"1" * 1024}", base: 2, precision: 1024
-    #       it_converts_to_s a, "0#{"1" * 1024}", base: 2, precision: 1025
-    #       it_converts_to_s a, "#{"0" * 976}#{"1" * 1024}", base: 2, precision: 2000
+        it_converts_to_s 123.to_bigger_i, "123", precision: 0
+        it_converts_to_s 123.to_bigger_i, "123", precision: 1
+        it_converts_to_s 123.to_bigger_i, "123", precision: 2
+        it_converts_to_s 123.to_bigger_i, "00123", precision: 5
+        it_converts_to_s 123.to_bigger_i, "#{"0" * 197}123", precision: 200
 
-    #       it_converts_to_s (-a), "-#{"1" * 1024}", base: 2, precision: 1023
-    #       it_converts_to_s (-a), "-#{"1" * 1024}", base: 2, precision: 1024
-    #       it_converts_to_s (-a), "-0#{"1" * 1024}", base: 2, precision: 1025
-    #       it_converts_to_s (-a), "-#{"0" * 976}#{"1" * 1024}", base: 2, precision: 2000
-    #     end
-    #   end
+        let(a) { (2.to_bigger_i << 1023) - 1 }
+        it_converts_to_s a, "#{"1" * 1024}", base: 2, precision: 1023
+        it_converts_to_s a, "#{"1" * 1024}", base: 2, precision: 1024
+        it_converts_to_s a, "0#{"1" * 1024}", base: 2, precision: 1025
+        it_converts_to_s a, "#{"0" * 976}#{"1" * 1024}", base: 2, precision: 2000
+
+        it_converts_to_s (-a), "-#{"1" * 1024}", base: 2, precision: 1023
+        it_converts_to_s (-a), "-#{"1" * 1024}", base: 2, precision: 1024
+        it_converts_to_s (-a), "-0#{"1" * 1024}", base: 2, precision: 1025
+        it_converts_to_s (-a), "-#{"0" * 976}#{"1" * 1024}", base: 2, precision: 2000
+      end
+    end
 
     #   # TODO: after implementing to_big_f
     #   # it "does to_big_f" do

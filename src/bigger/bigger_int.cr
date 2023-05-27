@@ -2,12 +2,15 @@ module Bigger
   struct Int < ::Int
     # if you change these, don't forget to update .to_u8 to appropriate method
     alias BaseType = UInt8
-    BASE_ONE      = 1u8
+    alias HigherBufferType = UInt16
+    BASE_ONE = 1u8
+    # alias BaseType = UInt32
+    # alias HigherBufferType = UInt64
+    # BASE_ONE      = 1u32
     BASE_NUM_BITS = sizeof(BaseType) * 8
     BASE          = 2u64**BASE_NUM_BITS
     BASE_ZERO     = BaseType.zero
     # A signed version of the next type bigger than BasyType. Used as temp buffer calculation between numbers of BaseType
-    alias HigherBufferType = UInt16
 
     PRINT_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".each_char.to_a
 
@@ -142,11 +145,19 @@ module Bigger
       (first.digits.size - 1).downto(0).each do |i|
         remainder.digits[0] = first.digits[i]
         temp = Bigger::Int.new(0)
-        while remainder >= (temp + second_abs)
-          # pp! remainder.digits, temp.digits, new_digits
-          new_digits[i] += 1
-          temp += second_abs
-        end
+        # new_digits[i] = BASE_ZERO + ((BASE_ZERO..BaseType::MAX).bsearch do |bser|
+        #   ((bser &+ 1) * second_abs + temp) > remainder
+        # end || BASE_ZERO)
+        new_digits[i] = BASE_ZERO + ((HigherBufferType.zero..BASE).bsearch do |bser|
+          ((bser &+ 1) * second_abs + temp) > remainder
+        end || BASE_ZERO)
+        temp += (second_abs * new_digits[i])
+        # while remainder >= (temp + second_abs)
+        #   new_digits[i] += 1
+        #   temp += second_abs
+        # end
+        # puts new_digits[i]
+        # puts "------"
         remainder -= temp
         remainder = remainder << BASE_NUM_BITS
       end
@@ -188,10 +199,15 @@ module Bigger
 
     def <<(other : Int32) : Bigger::Int
       return self >> -other if other < 0
+      # puts "#{Time.monotonic}: Starting shift left with #{digits}, from:\n#{caller.join("\n\t")}"
       start_idx = other // BASE_NUM_BITS
+      # puts "#{Time.monotonic}: Start index: #{start_idx}"
       other %= BASE_NUM_BITS
+      # puts "#{Time.monotonic}: Other: #{other}"
       new_digits = Array(BaseType).new(digits.size + start_idx) { BASE_ZERO }
+      # puts "#{Time.monotonic}: New digits initialized"
       new_digits[start_idx, digits.size] = digits
+      # puts "#{Time.monotonic}: New digits at start index up to #{digits.size} copied"
       # pp! start_idx, other, new_digits, new_digits.map(&.to_s(2))
 
       return Bigger::Int.new(new_digits) if other.zero?
@@ -200,14 +216,16 @@ module Bigger
       offset = BASE_NUM_BITS - other
       new_digits << BASE_ZERO
 
+      # puts "#{Time.monotonic}: Starting loop"
       start_idx.upto(digits.size + start_idx - 1).each do |i|
+        # puts "\t#{Time.monotonic}: Index #{i}"
         # pp! i, new_digits, new_digits.map(&.to_s(2))
         temp = digits[i - start_idx] >> offset
         new_digits[i] = (digits[i - start_idx] << other) + carry_over
         carry_over = temp
       end
       new_digits[-1] = carry_over
-      # puts "Final"
+      # puts "\t#{Time.monotonic}: Final: #{new_digits}"
       # pp! new_digits, new_digits.map(&.to_s(2))
 
       Bigger::Int.new(new_digits)
@@ -273,7 +291,7 @@ module Bigger
         l = larger.digits.unsafe_fetch(dig)
         s = smaller.digits[dig]? || BASE_ZERO
         new_digits.unsafe_put(dig, l &- s &- borrow)
-        borrow = s > l ? BASE_ONE : BASE_ZERO
+        borrow = s > l || (s == l && borrow > 0) ? BASE_ONE : BASE_ZERO
       end
       {new_digits, resulting_sign}
     end
@@ -318,10 +336,9 @@ module Bigger
     end
 
     # TODO
-    # def **(other : Bigger::Int) : Bigger::Int
+    # def **(other : Bigger::Int) : self
+    # Implement more efficient version of this operator (if possible, might just need to optimize multiplication)
     # end
-
-    # wrap_in_big_int("**")
 
     def *(other : Bigger::Int) : Bigger::Int
       prod = Bigger::Int.new
@@ -389,6 +406,8 @@ module Bigger
     wrap_in_big_int("|")
     wrap_in_big_int("^")
 
+    # wrap_in_big_int("**")
+
     # ============================ OTHER ================================
 
     def gcd(other : Bigger::Int) : Bigger::Int
@@ -418,8 +437,11 @@ module Bigger
     wrap_in_big_int(remainder)
 
     def unsafe_shr(other : Bigger::Int) : Bigger::Int
-      # puts "calling unsafe_shr"
       self >> other
+    end
+
+    def unsafe_shl(other : Bigger::Int) : Bigger::Int
+      self << other
     end
 
     wrap_in_big_int(unsafe_shr)
@@ -590,28 +612,24 @@ module Bigger
       io << "("
       to_s(io)
       io << ")"
-      # io << digits.map(&.to_s.rjust(3)).to_s
     end
 
-    def to_s(io : IO, base : ::Int::Primitive = 10) : Nil
-      return io << "0" if digits.size == 1 && digits[0].zero?
-      io << '-' unless @sign
-      temp = self.abs
-      str = [] of Char
-      while temp > 0
-        str << PRINT_DIGITS[(temp % base).to_i]
-        temp //= base
+    private def internal_to_s(base, precision, upcase = false, &)
+      print_digits = (base == 62 ? DIGITS_BASE62 : (upcase ? DIGITS_UPCASE : DIGITS_DOWNCASE)).to_unsafe
+      if digits.size == 1 && digits[0].zero?
+        yield ['0'.ord.to_u8].to_unsafe, 1, false
+      else
+        temp = self.abs
+        str = [] of UInt8
+        # time_start = Time.monotonic
+        while temp > 0
+          quot, rem = temp.divmod(base)
+          str << print_digits[(rem).to_i]
+          temp = quot
+        end
+        # puts "Time to fill digits: #{(Time.monotonic - time_start).total_milliseconds}"
+        yield str.reverse.to_unsafe, str.size, negative?
       end
-      str.reverse.each { |c| io << c }
-    end
-
-    def to_s(base : ::Int::Primitive = 10) : String
-      # puts "to_s"
-      ret = String.build do |bob|
-        to_s(bob, base)
-      end
-      # puts "returning '#{ret}'"
-      ret
     end
   end
 end
