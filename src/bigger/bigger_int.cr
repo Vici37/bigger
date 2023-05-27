@@ -1,23 +1,23 @@
 module Bigger
   struct Int < ::Int
     # This block causes digits to be UInt8, which limits the size bigger ints, but makes testsing contrived cases easier.
-    # alias BaseType = UInt8
-    # alias HigherBufferType = UInt16
-    # BASE_ONE = 1u8
+    alias BaseType = UInt8
+    alias HigherBufferType = UInt16
+    BASE_ONE = 1u8
 
-    # macro to_basetype(whatever, *, args = nil)
-    #   ({{whatever.id}}).to_u8{% if args %}({{args}}){% end %}
-    # end
+    macro to_basetype(whatever, *, args = nil)
+      ({{whatever.id}}).to_u8{% if args %}({{args}}){% end %}
+    end
 
     # This block is more for "production" (real) use of this library, increasing the size of bigger nums, and a good per boost.
     # TODO: look into using UInt64 instead of UInt32 for digits?
-    alias BaseType = UInt32
-    alias HigherBufferType = UInt64
-    BASE_ONE = 1u32
+    # alias BaseType = UInt32
+    # alias HigherBufferType = UInt64
+    # BASE_ONE = 1u32
 
-    macro to_basetype(whatever, *, args = nil)
-      ({{whatever.id}}).to_u32{% if args %}({{args}}){% end %}
-    end
+    # macro to_basetype(whatever, *, args = nil)
+    #   ({{whatever.id}}).to_u32{% if args %}({{args}}){% end %}
+    # end
 
     # ONLY ONE OF THE TWO ABOVE BLOCKS SHOULD BE UNCOMMENTED, BUT AT LEAST ONE OF THEM NEEDS TO BE
 
@@ -425,9 +425,14 @@ module Bigger
     # ============================ OTHER ================================
 
     def gcd(other : Bigger::Int) : Bigger::Int
-      # puts "calling gcd"
-      # TODO
-      self
+      # TODO: handle negatives
+      a = self.abs
+      b = other.abs
+      # cribbed from https://cs.stackexchange.com/questions/1447/what-is-most-efficient-for-gcd
+      while b > 0
+        b ^= a ^= b ^= a %= b
+      end
+      a
     end
 
     wrap_in_big_int(gcd)
@@ -510,105 +515,40 @@ module Bigger
       to_i32
     end
 
-    def to_i32 : Int32
-      # puts "to_i32"
-      ret = 0
-
-      num_digits = (32 // BASE_NUM_BITS)
-      # TODO: detect and throw ArithmeticOverflow exception if the number of digits requires us to go more than Int32 capacity
-
-      offset = 0
-      num_digits.times do |i|
-        break if i >= @digits.size
-        ret += (@digits[i] << offset)
-        offset += BASE_NUM_BITS
-      end
-
-      ret = -ret unless @sign
-      ret
-    end
-
-    def to_i64 : Int64
-      # puts "to_i64"
-      ret = 0i64
-
-      num_digits = (64 // BASE_NUM_BITS)
-      # TODO: detect and throw ArithmeticOverflow exception if the number of digits requires us to go more than Int32 capacity
-
-      offset = 0
-      num_digits.times do |i|
-        break if i >= @digits.size
-        ret |= (@digits[i] << offset)
-        offset += BASE_NUM_BITS
-      end
-
-      ret = -ret unless @sign
-      ret
-    end
-
-    def to_u8 : UInt8
-      # puts "to_u8"
-      to_i.to_u8
-    end
-
-    def to_big_f : Bigger::Int
-      # puts "to_big_f"
-      # TODO: should be actually bigger_f
-      self
-    end
-
-    def to_i8! : Int8
-      # puts "to_u8!"
-      # TODO
-      0i8
-    end
-
-    def to_i16! : Int16
-      # puts "to_i16!"
-      # TODO
-      0i16
-    end
-
     def to_u : UInt32
-      # puts "to_u"
       to_u32
     end
 
-    def to_u32 : UInt32
-      # puts "to_u32"
-      # TODO
-      0u32
+    macro define_to_method(num_bits, type, check_digits)
+      def to_{{type.id}}{{num_bits}}{% unless check_digits %}!{% end %} : {% if type == "u" %}U{% end %}Int{{num_bits}}
+        raise OverflowError.new("Can't cast negative number to unsigned int") if {{type}} != "i" && negative?
+        ret = 0{{type.id}}{{num_bits}}
+
+        num_digits = ({{num_bits}} // BASE_NUM_BITS)
+        {% if check_digits %}raise OverflowError.new("Too many bits in bignum") if num_digits < digits.size{% end %}
+
+        offset = 0
+        num_digits.times do |i|
+          break if i >= @digits.size
+          ret |= (@digits[i].to_u{{num_bits}} << offset)
+          offset += BASE_NUM_BITS
+        end
+        ret
+      end
     end
 
-    def to_u8! : UInt8
-      # puts "to_u8!"
-      # TODO
-      0u8
+    macro define_to_methods_for_bits(num_bits)
+      define_to_method({{num_bits}}, "i", false)
+      define_to_method({{num_bits}}, "i", true)
+      define_to_method({{num_bits}}, "u", false)
+      define_to_method({{num_bits}}, "u", true)
     end
 
-    def to_u16! : UInt16
-      # puts "to_u16!"
-      # TODO
-      0u16
-    end
-
-    def to_u64 : UInt64
-      # puts "to_u64"
-      # TODO
-      0u64
-    end
-
-    def to_i64! : Int64
-      # puts "to_i64!"
-      # TODO
-      0i64
-    end
-
-    def to_u64! : UInt64
-      # puts "to_u64!"
-      # TODO
-      0u64
-    end
+    define_to_methods_for_bits(128)
+    define_to_methods_for_bits(64)
+    define_to_methods_for_bits(32)
+    define_to_methods_for_bits(16)
+    define_to_methods_for_bits(8)
 
     def to_f : Float64
       # puts "to_f"
@@ -616,7 +556,11 @@ module Bigger
       0f64
     end
 
-    # TODO: add missing to_* methods
+    def to_big_f : Bigger::Int
+      # puts "to_big_f"
+      # TODO: should be actually bigger_f
+      self
+    end
 
     def inspect(io : IO) : Nil
       io << (positive? ? "+" : "-")

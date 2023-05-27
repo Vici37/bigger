@@ -648,56 +648,57 @@ Spectator.describe Bigger::Int do
       expect(2.to_bigger_i.inspect).to eq "+[  2](2)"
     end
 
-    #   it "does gcd and lcm" do
-    #     # 3 primes
-    #     a = Bigger::Int.new("48112959837082048697")
-    #     b = Bigger::Int.new("12764787846358441471")
-    #     c = Bigger::Int.new("36413321723440003717")
-    #     abc = a * b * c
-    #     a_17 = a * 17
+    it "does gcd and lcm" do
+      # 3 primes
+      a = Bigger::Int.new("48112959837082048697")
+      b = Bigger::Int.new("12764787846358441471")
+      c = Bigger::Int.new("36413321723440003717")
+      abc = a * b * c
+      a_17 = a * 17
 
-    #     (abc * b).gcd(abc * c).should eq(abc)
-    #     abc.gcd(a_17).should eq(a)
-    #     (abc * b).lcm(abc * c).should eq(abc * b * c)
-    #     (abc * b).gcd(abc * c).should be_a(Bigger::Int)
+      expect((abc * b).gcd(abc * c)).to eq(abc)
+      expect(abc.gcd(a_17)).to eq(a)
+      expect((abc * b).lcm(abc * c)).to eq(abc * b * c)
+      expect((abc * b).gcd(abc * c)).to be_a(Bigger::Int)
 
-    #     (a_17).gcd(17).should eq(17)
-    #     (-a_17).gcd(17).should eq(17)
-    #     (17).gcd(a_17).should eq(17)
-    #     (17).gcd(-a_17).should eq(17)
+      expect((a_17).gcd(17)).to eq(17)
+      expect((-a_17).gcd(17)).to eq(17)
+      expect((17).gcd(a_17)).to eq(17)
+      expect((17).gcd(-a_17)).to eq(17)
 
-    #     (a_17).lcm(17).should eq(a_17)
-    #     (-a_17).lcm(17).should eq(a_17)
-    #     (17).lcm(a_17).should eq(a_17)
-    #     (17).lcm(-a_17).should eq(a_17)
+      expect((a_17).lcm(17)).to eq(a_17)
+      expect((-a_17).lcm(17)).to eq(a_17)
+      expect((17).lcm(a_17)).to eq(a_17)
+      expect((17).lcm(-a_17)).to eq(a_17)
 
-    #     (a_17).gcd(17).should be_a(Int::Unsigned)
-    #   end
+      # TODO: not sure where this assumption is coming from or how bigints do it. Do I need to cast to unsigned int?
+      # expect((a_17).gcd(17)).to be_a(Int::Unsigned)
+    end
 
-    #   it "can use Number::[]" do
-    #     a = Bigger::Int[146, "3464", 97, "545"]
-    #     b = [Bigger::Int.new(146), Bigger::Int.new(3464), Bigger::Int.new(97), Bigger::Int.new(545)]
-    #     a.should eq(b)
-    #   end
+    it "can use Number::[]" do
+      a = Bigger::Int[146, "3464", 97, "545"]
+      b = [Bigger::Int.new(146), Bigger::Int.new(3464), Bigger::Int.new(97), Bigger::Int.new(545)]
+      expect(a).to eq(b)
+    end
 
-    #   it "can be casted into other Number types" do
-    #     big = Bigger::Int.new(1234567890)
-    #     big.to_i.should eq(1234567890)
-    #     big.to_i8!.should eq(-46)
-    #     big.to_i16!.should eq(722)
-    #     big.to_i32.should eq(1234567890)
-    #     big.to_i64.should eq(1234567890)
-    #     big.to_u.should eq(1234567890)
-    #     big.to_u8!.should eq(210)
-    #     big.to_u16!.should eq(722)
-    #     big.to_u32.should eq(1234567890)
+    it "can be casted into other Number types" do
+      big = Bigger::Int.new(1234567890)
+      expect(big.to_i).to eq(1234567890)
+      expect(big.to_i8!).to eq(-46)
+      expect(big.to_i16!).to eq(722)
+      expect(big.to_i32).to eq(1234567890)
+      expect(big.to_i64).to eq(1234567890)
+      expect(big.to_u).to eq(1234567890)
+      expect(big.to_u8!).to eq(210)
+      expect(big.to_u16!).to eq(722)
+      expect(big.to_u32).to eq(1234567890)
 
-    #     expect_raises(OverflowError) { Bigger::Int.new(-1234567890).to_u }
+      expect_raises(OverflowError) { Bigger::Int.new(-1234567890).to_u }
 
-    #     u64 = big.to_u64
-    #     u64.should eq(1234567890)
-    #     u64.should be_a(UInt64)
-    #   end
+      u64 = big.to_u64
+      expect(u64).to eq(1234567890)
+      expect(u64).to be_a(UInt64)
+    end
 
     #   context "conversion to 64-bit" do
     #     it "above 64 bits" do
