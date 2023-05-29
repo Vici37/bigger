@@ -277,6 +277,10 @@ Spectator.describe Bigger::Int do
       expect(-11.to_bigger_i.divmod(-2)).to eq({5, -1})
     end
 
+    it "divmods a smaller negative with a larger positive" do
+      expect((-(0.to_bigger_i + UInt32::MAX)).divmod(1i64 << 32)).to eq({-1, 1})
+    end
+
     it "adds" do
       expect((1.to_bigger_i + 2.to_bigger_i)).to eq(3.to_bigger_i)
       expect((1.to_bigger_i + 2)).to eq(3.to_bigger_i)
@@ -700,75 +704,75 @@ Spectator.describe Bigger::Int do
       expect(u64).to be_a(UInt64)
     end
 
-    #   context "conversion to 64-bit" do
-    #     it "above 64 bits" do
-    #       big = Bigger::Int.new("9" * 20)
-    #       expect_raises(OverflowError) { big.to_i64 }
-    #       expect_raises(OverflowError) { big.to_u64 }
-    #       big.to_i64!.should eq(7766279631452241919) # 99999999999999999999 - 5*(2**64)
-    #       big.to_u64!.should eq(7766279631452241919)
+    context "conversion to 64-bit" do
+      it "above 64 bits" do
+        big = Bigger::Int.new("9" * 20)
+        expect_raises(OverflowError) { big.to_i64 }
+        expect_raises(OverflowError) { big.to_u64 }
+        expect(big.to_i64!).to eq(7766279631452241919) # 99999999999999999999 - 5*(2**64)
+        expect(big.to_u64!).to eq(7766279631452241919)
 
-    #       big = Bigger::Int.new("9" * 32)
-    #       expect_raises(OverflowError) { big.to_i64 }
-    #       expect_raises(OverflowError) { big.to_u64 }
-    #       big.to_i64!.should eq(-8814407033341083649)   # 99999999999999999999999999999999 - 5421010862428*(2**64)
-    #       big.to_u64!.should eq(9632337040368467967u64) # 99999999999999999999999999999999 - 5421010862427*(2**64)
-    #     end
+        big = Bigger::Int.new("9" * 32)
+        expect_raises(OverflowError) { big.to_i64 }
+        expect_raises(OverflowError) { big.to_u64 }
+        expect(big.to_i64!).to eq(-8814407033341083649)   # 99999999999999999999999999999999 - 5421010862428*(2**64)
+        expect(big.to_u64!).to eq(9632337040368467967u64) # 99999999999999999999999999999999 - 5421010862427*(2**64)
+      end
 
-    #     it "between 63 and 64 bits" do
-    #       big = Bigger::Int.new(i = 9999999999999999999u64)
-    #       expect_raises(OverflowError) { big.to_i64 }
-    #       big.to_u64.should eq(i)
-    #       big.to_i64!.should eq(-8446744073709551617) # 9999999999999999999 - 2**64
-    #       big.to_u64!.should eq(i)
-    #     end
+      it "between 63 and 64 bits" do
+        big = Bigger::Int.new(i = 9999999999999999999u64)
+        expect_raises(OverflowError) { big.to_i64 }
+        expect(big.to_u64).to eq(i)
+        expect(big.to_i64!).to eq(-8446744073709551617) # 9999999999999999999 - 2**64
+        expect(big.to_u64!).to eq(i)
+      end
 
-    #     it "between 32 and 63 bits" do
-    #       big = Bigger::Int.new(i = 9999999999999)
-    #       big.to_i64.should eq(i)
-    #       big.to_u64.should eq(i)
-    #       big.to_i64!.should eq(i)
-    #       big.to_u64!.should eq(i)
-    #     end
+      it "between 32 and 63 bits" do
+        big = Bigger::Int.new(i = 9999999999999)
+        expect(big.to_i64).to eq(i)
+        expect(big.to_u64).to eq(i)
+        expect(big.to_i64!).to eq(i)
+        expect(big.to_u64!).to eq(i)
+      end
 
-    #     it "negative under 32 bits" do
-    #       big = Bigger::Int.new(i = -9999)
-    #       big.to_i64.should eq(i)
-    #       expect_raises(OverflowError) { big.to_u64 }
-    #       big.to_i64!.should eq(i)
-    #       big.to_u64!.should eq(18446744073709541617u64) # -9999 + 2**64
-    #     end
+      it "negative under 32 bits" do
+        big = Bigger::Int.new(i = -9999)
+        expect(big.to_i64).to eq(i)
+        expect_raises(OverflowError) { big.to_u64 }
+        expect(big.to_i64!).to eq(i)
+        expect(big.to_u64!).to eq(18446744073709541617u64) # -9999 + 2**64
+      end
 
-    #     it "negative between 32 and 63 bits" do
-    #       big = Bigger::Int.new(i = -9999999999999)
-    #       big.to_i64.should eq(i)
-    #       expect_raises(OverflowError) { big.to_u64 }
-    #       big.to_i64!.should eq(i)
-    #       big.to_u64!.should eq(18446734073709551617u64) # -9999999999999 + 2**64
-    #     end
+      it "negative between 32 and 63 bits" do
+        big = Bigger::Int.new(i = -9999999999999)
+        expect(big.to_i64).to eq(i)
+        expect_raises(OverflowError) { big.to_u64 }
+        expect(big.to_i64!).to eq(i)
+        expect(big.to_u64!).to eq(18446734073709551617u64) # -9999999999999 + 2**64
+      end
 
-    #     it "negative between 63 and 64 bits" do
-    #       big = Bigger::Int.new("-9999999999999999999")
-    #       expect_raises(OverflowError) { big.to_i64 }
-    #       expect_raises(OverflowError) { big.to_u64 }
-    #       big.to_i64!.should eq(8446744073709551617) # -9999999999999999999 + 2**64
-    #       big.to_u64!.should eq(8446744073709551617)
-    #     end
+      it "negative between 63 and 64 bits" do
+        big = Bigger::Int.new("-9999999999999999999")
+        expect_raises(OverflowError) { big.to_i64 }
+        expect_raises(OverflowError) { big.to_u64 }
+        expect(big.to_i64!).to eq(8446744073709551617) # -9999999999999999999 + 2**64
+        expect(big.to_u64!).to eq(8446744073709551617)
+      end
 
-    #     it "negative above 64 bits" do
-    #       big = Bigger::Int.new("-" + "9" * 20)
-    #       expect_raises(OverflowError) { big.to_i64 }
-    #       expect_raises(OverflowError) { big.to_u64 }
-    #       big.to_i64!.should eq(-7766279631452241919)    # -9999999999999999999 + 5*(2**64)
-    #       big.to_u64!.should eq(10680464442257309697u64) # -9999999999999999999 + 6*(2**64)
+      it "negative above 64 bits" do
+        big = Bigger::Int.new("-" + "9" * 20)
+        expect_raises(OverflowError) { big.to_i64 }
+        expect_raises(OverflowError) { big.to_u64 }
+        expect(big.to_i64!).to eq(-7766279631452241919)    # -9999999999999999999 + 5*(2**64)
+        expect(big.to_u64!).to eq(10680464442257309697u64) # -9999999999999999999 + 6*(2**64)
 
-    #       big = Bigger::Int.new("-" + "9" * 32)
-    #       expect_raises(OverflowError) { big.to_i64 }
-    #       expect_raises(OverflowError) { big.to_u64 }
-    #       big.to_i64!.should eq(8814407033341083649) # -99999999999999999999999999999999 + 5421010862428*(2**64)
-    #       big.to_u64!.should eq(8814407033341083649)
-    #     end
-    #   end
+        big = Bigger::Int.new("-" + "9" * 32)
+        expect_raises(OverflowError) { big.to_i64 }
+        expect_raises(OverflowError) { big.to_u64 }
+        expect(big.to_i64!).to eq(8814407033341083649) # -99999999999999999999999999999999 + 5421010862428*(2**64)
+        expect(big.to_u64!).to eq(8814407033341083649)
+      end
+    end
 
     #   it "can cast UInt64::MAX to UInt64 (#2264)" do
     #     Bigger::Int.new(UInt64::MAX).to_u64.should eq(UInt64::MAX)

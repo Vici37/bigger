@@ -147,7 +147,8 @@ module Bigger
     end
 
     private def divmod(first : Bigger::Int, second : Bigger::Int) : Tuple(Bigger::Int, Bigger::Int)
-      return {Bigger::Int.new, first.clone} if second.compare_digits(first) == 1
+      # Shortcut for if both numbers are of the same sign, and first is smaller than second. Then we can return 0 and second.
+      return {Bigger::Int.new, first.clone} if first.positive? == second.positive? && second.compare_digits(first) == 1
       raise DivisionByZeroError.new if second.zero?
       second_abs = second.abs
 
@@ -176,8 +177,8 @@ module Bigger
         remainder = remainder << BASE_NUM_BITS
       end
       remainder = remainder >> BASE_NUM_BITS
-      should_be_positive = !(first.positive? ^ second.positive?)
-      quotient = Bigger::Int.new(new_digits, !(first.positive? ^ second.positive?))
+      should_be_positive = first.positive? == second.positive?
+      quotient = Bigger::Int.new(new_digits, first.positive? == second.positive?)
 
       # pp! quotient.digits, remainder.digits
       if !should_be_positive && remainder > 0
@@ -519,25 +520,43 @@ module Bigger
       to_u32
     end
 
-    macro define_to_method(num_bits, type, check_digits)
-      def to_{{type.id}}{{num_bits}}{% unless check_digits %}!{% end %} : {% if type == "u" %}U{% end %}Int{{num_bits}}
-        raise OverflowError.new("Can't cast negative number to unsigned int") if {{type}} != "i" && negative?
-        ret = 0{{type.id}}{{num_bits}}
+    macro define_to_method(num_bits, type, wrap_digits)
 
+      def to_{{type.id}}{{num_bits}}{% if wrap_digits %}!{% end %} : {% if type == "u" %}U{% end %}Int{{num_bits}}
+        {% unless wrap_digits %}raise OverflowError.new("Can't cast negative number to unsigned int") if {{type}} != "i" && negative?{% end %}
         num_digits = ({{num_bits}} // BASE_NUM_BITS)
-        {% if check_digits %}raise OverflowError.new("Too many bits in bignum") if num_digits < digits.size{% end %}
+        {% unless wrap_digits %}
+        raise OverflowError.new("Too many bits in bignum") if num_digits < digits.size
+        raise OverflowError.new("Can't cast to signed int") if num_digits == digits.size && {{type}} == "i" && (digits[-1] & (1 << (BASE_NUM_BITS - 1)) > 0)
+        {% end %}
 
-        offset = 0
-        num_digits.times do |i|
-          break if i >= @digits.size
-          ret |= (@digits[i].to_u{{num_bits}} << offset)
-          offset += BASE_NUM_BITS
+        if BASE_NUM_BITS > {{num_bits}}
+          digits[0].to_{{type.id}}{{num_bits}}{% if wrap_digits %}!{% end %}
+        else
+
+          {% if wrap_digits %}
+          digs = (self % BITS{{num_bits}}).digits
+          {% else %}
+          digs = digits
+          {% end %}
+
+          ret = 0{{type.id}}{{num_bits}}
+          offset = 0
+          num_digits.times do |i|
+            break if i >= digs.size
+            ret |= (digs[i].to_u{{num_bits}} << offset)
+            offset += BASE_NUM_BITS
+          end
+          {% if type == "i" %}ret = -ret if negative? && digs.size < num_digits{% end %}
+          ret
         end
-        ret
       end
     end
 
     macro define_to_methods_for_bits(num_bits)
+      private BITS{{num_bits}} = Bigger::Int.new(1) << {{num_bits}}
+      private BITS{{num_bits - 1}} = Bigger::Int.new(1) << {{num_bits - 1}}
+
       define_to_method({{num_bits}}, "i", false)
       define_to_method({{num_bits}}, "i", true)
       define_to_method({{num_bits}}, "u", false)
