@@ -17,7 +17,7 @@ TODO: Write a description here
 ## Usage
 
 ```crystal
-require "bigger-num"
+require "bigger"
 ```
 
 TODO: Write usage instructions here
