@@ -1,5 +1,5 @@
 # require "big"
 require "spectator"
-require "../src/bigger-num"
+require "../src/bigger"
 require "./number"
 require "./string"
