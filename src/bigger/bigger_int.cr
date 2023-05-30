@@ -1,6 +1,6 @@
 module Bigger
   struct Int < ::Int
-    # This block causes digits to be UInt8, which limits the size bigger ints, but makes testsing contrived cases easier.
+    # This block causes internal_digits to be UInt8, which limits the size bigger ints, but makes testsing contrived cases easier.
     alias BaseType = UInt8
     alias HigherBufferType = UInt16
     BASE_ONE = 1u8
@@ -10,7 +10,7 @@ module Bigger
     end
 
     # This block is more for "production" (real) use of this library, increasing the size of bigger nums, and a good per boost.
-    # TODO: look into using UInt64 instead of UInt32 for digits?
+    # TODO: look into using UInt64 instead of UInt32 for internal_digits?
     # alias BaseType = UInt32
     # alias HigherBufferType = UInt64
     # BASE_ONE = 1u32
@@ -29,10 +29,10 @@ module Bigger
     PRINT_DIGITS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".each_char.to_a
 
     # Least significant bit in index 0
-    getter digits : Array(BaseType) = Array(BaseType).new(8)
+    getter internal_digits : Array(BaseType) = Array(BaseType).new(8)
     @sign : Bool = true
 
-    def initialize(@digits, @sign = true)
+    def initialize(@internal_digits, @sign = true)
       trim_outter_zeros
     end
 
@@ -56,29 +56,29 @@ module Bigger
         temp *= base
       end
       temp //= base
-      @digits = temp.digits
+      @internal_digits = temp.internal_digits
     end
 
     def initialize(inp : ::Int)
       @sign = inp >= 0
       inp = inp.abs
       while inp > 0
-        @digits << to_basetype(inp & BaseType::MAX)
+        @internal_digits << to_basetype(inp & BaseType::MAX)
         inp = inp >> BASE_NUM_BITS
       end
-      @digits << BASE_ZERO if @digits.empty?
-      # puts "init from int primitive #{inp}: #{digits}"
+      @internal_digits << BASE_ZERO if @internal_digits.empty?
+      # puts "init from int primitive #{inp}: #{internal_digits}"
     end
 
     def initialize(inp : ::Int::Primitive)
       @sign = inp >= 0
       inp = inp.abs
       while inp > 0
-        @digits << to_basetype(inp & BaseType::MAX)
+        @internal_digits << to_basetype(inp & BaseType::MAX)
         inp = inp >> BASE_NUM_BITS
       end
-      @digits << BASE_ZERO if @digits.empty?
-      # puts "init from int primitive #{inp}: #{digits}"
+      @internal_digits << BASE_ZERO if @internal_digits.empty?
+      # puts "init from int primitive #{inp}: #{internal_digits}"
     end
 
     def initialize(inp : ::Number)
@@ -90,12 +90,12 @@ module Bigger
     end
 
     def initialize
-      @digits << BASE_ZERO
+      @internal_digits << BASE_ZERO
       # puts "init to zero"
     end
 
     def sign : Int32
-      return 0 if @digits == [BASE_ZERO]
+      return 0 if @internal_digits == [BASE_ZERO]
       positive? ? 1 : -1
     end
 
@@ -109,13 +109,13 @@ module Bigger
 
     def popcount
       # puts "popcount"
-      @digits.sum(&.popcount)
+      @internal_digits.sum(&.popcount)
     end
 
     def trailing_zeros_count
       # puts "trailing_zeros_count"
       count = 0
-      @digits.each do |digit|
+      @internal_digits.each do |digit|
         count += digit.trailing_zeros_count
         break if digit != 0
       end
@@ -152,13 +152,13 @@ module Bigger
       raise DivisionByZeroError.new if second.zero?
       second_abs = second.abs
 
-      # pp! first.digits, first.positive?, second.digits, second.positive?
+      # pp! first.internal_digits, first.positive?, second.internal_digits, second.positive?
 
       remainder = Bigger::Int.new
       temp = Bigger::Int.new
-      new_digits = Array(BaseType).new(first.digits.size) { BASE_ZERO }
-      (first.digits.size - 1).downto(0).each do |i|
-        remainder.digits[0] = first.digits[i]
+      new_digits = Array(BaseType).new(first.internal_digits.size) { BASE_ZERO }
+      (first.internal_digits.size - 1).downto(0).each do |i|
+        remainder.internal_digits[0] = first.internal_digits[i]
         temp = Bigger::Int.new(0)
         # new_digits[i] = BASE_ZERO + ((BASE_ZERO..BaseType::MAX).bsearch do |bser|
         #   ((bser &+ 1) * second_abs + temp) > remainder
@@ -180,16 +180,16 @@ module Bigger
       should_be_positive = first.positive? == second.positive?
       quotient = Bigger::Int.new(new_digits, first.positive? == second.positive?)
 
-      # pp! quotient.digits, remainder.digits
+      # pp! quotient.internal_digits, remainder.internal_digits
       if !should_be_positive && remainder > 0
         quotient -= 1
         # remainder -= 1 unless second.negative?
       end
       remainder = -remainder if second.negative?
       # puts "Final:"
-      # pp! quotient.digits, quotient.positive?
-      # pp! remainder.digits, (first - (quotient * second)).digits
-      # pp! (quotient * second).digits, (quotient * second).positive?
+      # pp! quotient.internal_digits, quotient.positive?
+      # pp! remainder.internal_digits, (first - (quotient * second)).internal_digits
+      # pp! (quotient * second).internal_digits, (quotient * second).positive?
       # puts "---------------------------"
       {quotient, first - (quotient * second)}
     end
@@ -201,7 +201,7 @@ module Bigger
     def >>(other : Int32) : Bigger::Int
       return self << -other if other < 0
 
-      new_digits = digits.dup
+      new_digits = internal_digits.dup
       new_digits.shift(other // BASE_NUM_BITS)
       other %= BASE_NUM_BITS
 
@@ -222,15 +222,15 @@ module Bigger
 
     def <<(other : Int32) : Bigger::Int
       return self >> -other if other < 0
-      # puts "#{Time.monotonic}: Starting shift left with #{digits}, from:\n#{caller.join("\n\t")}"
+      # puts "#{Time.monotonic}: Starting shift left with #{internal_digits}, from:\n#{caller.join("\n\t")}"
       start_idx = other // BASE_NUM_BITS
       # puts "#{Time.monotonic}: Start index: #{start_idx}"
       other %= BASE_NUM_BITS
       # puts "#{Time.monotonic}: Other: #{other}"
-      new_digits = Array(BaseType).new(digits.size + start_idx) { BASE_ZERO }
-      # puts "#{Time.monotonic}: New digits initialized"
-      new_digits[start_idx, digits.size] = digits
-      # puts "#{Time.monotonic}: New digits at start index up to #{digits.size} copied"
+      new_digits = Array(BaseType).new(internal_digits.size + start_idx) { BASE_ZERO }
+      # puts "#{Time.monotonic}: New internal_digits initialized"
+      new_digits[start_idx, internal_digits.size] = internal_digits
+      # puts "#{Time.monotonic}: New internal_digits at start index up to #{internal_digits.size} copied"
       # pp! start_idx, other, new_digits, new_digits.map(&.to_s(2))
 
       return Bigger::Int.new(new_digits) if other.zero?
@@ -240,11 +240,11 @@ module Bigger
       new_digits << BASE_ZERO
 
       # puts "#{Time.monotonic}: Starting loop"
-      start_idx.upto(digits.size + start_idx - 1).each do |i|
+      start_idx.upto(internal_digits.size + start_idx - 1).each do |i|
         # puts "\t#{Time.monotonic}: Index #{i}"
         # pp! i, new_digits, new_digits.map(&.to_s(2))
-        temp = digits[i - start_idx] >> offset
-        new_digits[i] = (digits[i - start_idx] << other) + carry_over
+        temp = internal_digits[i - start_idx] >> offset
+        new_digits[i] = (internal_digits[i - start_idx] << other) + carry_over
         carry_over = temp
       end
       new_digits[-1] = carry_over
@@ -262,11 +262,11 @@ module Bigger
     end
 
     private def sum_two_numbers_of_same_sign(first : Bigger::Int, second : Bigger::Int) : Tuple(Array(BaseType), Bool)
-      new_digits = Array(BaseType).new({first.digits.size, second.digits.size}.max + 1) { BASE_ZERO }
+      new_digits = Array(BaseType).new({first.internal_digits.size, second.internal_digits.size}.max + 1) { BASE_ZERO }
 
       carry = BASE_ZERO
       new_digits.size.times do |dig|
-        temp = HigherBufferType.zero + carry + (first.digits[dig]? || BASE_ZERO) + (second.digits[dig]? || BASE_ZERO)
+        temp = HigherBufferType.zero + carry + (first.internal_digits[dig]? || BASE_ZERO) + (second.internal_digits[dig]? || BASE_ZERO)
         new_digits.unsafe_put(dig, BASE_ZERO + (temp % BASE))
         # Different techniques. Current one is fastest
         # carry = temp // BASE
@@ -295,9 +295,9 @@ module Bigger
     # TODO: find a way to optimize this
     private def subtract_smaller_from_larger(first : Bigger::Int, second : Bigger::Int) : Tuple(Array(BaseType), Bool)
       # borrow = BASE_ZERO
-      # new_digits = Array(BaseType).new({first.digits.size, second.digits.size}.max) { BASE_ZERO }
+      # new_digits = Array(BaseType).new({first.internal_digits.size, second.internal_digits.size}.max) { BASE_ZERO }
       # new_digits.size.times do |dig|
-      #   temp = HigherBufferType.zero + (first.digits[dig]? || BASE_ZERO) - (second.digits[dig]? || BASE_ZERO) - borrow + BASE
+      #   temp = HigherBufferType.zero + (first.internal_digits[dig]? || BASE_ZERO) - (second.internal_digits[dig]? || BASE_ZERO) - borrow + BASE
       #   new_digits.unsafe_put(dig, BASE_ZERO + (temp % BASE))
       #   borrow = BASE_ZERO + (temp // BASE)
       # end
@@ -308,11 +308,11 @@ module Bigger
       larger, smaller, resulting_sign = (comp > 0 ? {first, second, first.positive?} : {second, first, second.positive?})
 
       borrow = BASE_ZERO
-      new_digits = Array(BaseType).new(larger.digits.size) { BASE_ZERO }
+      new_digits = Array(BaseType).new(larger.internal_digits.size) { BASE_ZERO }
 
-      0.upto(larger.digits.size - 1).each do |dig|
-        l = larger.digits.unsafe_fetch(dig)
-        s = smaller.digits[dig]? || BASE_ZERO
+      0.upto(larger.internal_digits.size - 1).each do |dig|
+        l = larger.internal_digits.unsafe_fetch(dig)
+        s = smaller.internal_digits[dig]? || BASE_ZERO
         new_digits.unsafe_put(dig, l &- s &- borrow)
         borrow = s > l || (s == l && borrow > 0) ? BASE_ONE : BASE_ZERO
       end
@@ -325,7 +325,7 @@ module Bigger
     end
 
     def - : Bigger::Int
-      Bigger::Int.new(digits.dup, !@sign)
+      Bigger::Int.new(internal_digits.dup, !@sign)
     end
 
     def &-(other : Bigger::Int) : Bigger::Int
@@ -336,7 +336,7 @@ module Bigger
       def {{op.id}}(other : Bigger::Int) : Bigger::Int
         new_digits = new_digits_of(other)
         new_digits.size.times do |dig|
-          new_digits[dig] = (digits[dig]? || BASE_ZERO) {{op.id}} (other.digits[dig]? || BASE_ZERO)
+          new_digits[dig] = (internal_digits[dig]? || BASE_ZERO) {{op.id}} (other.internal_digits[dig]? || BASE_ZERO)
         end
         Bigger::Int.new(new_digits)
       end
@@ -349,7 +349,7 @@ module Bigger
     def ^(other : Bigger::Int) : Bigger::Int
       new_digits = new_digits_of(other)
       new_digits.size.times do |dig|
-        new_digits[dig] = (digits[dig]? || BASE_ZERO) ^ (other.digits[dig]? || BASE_ZERO)
+        new_digits[dig] = (internal_digits[dig]? || BASE_ZERO) ^ (other.internal_digits[dig]? || BASE_ZERO)
       end
       Bigger::Int.new(new_digits)
     end
@@ -365,28 +365,28 @@ module Bigger
 
     def *(other : Bigger::Int) : Bigger::Int
       prod = Bigger::Int.new
-      # pp! digits, other.digits
-      (digits.size).times do |i|
-        new_digits = Array(BaseType).new(other.digits.size + 1 + i) { BASE_ZERO }
+      # pp! internal_digits, other.internal_digits
+      (internal_digits.size).times do |i|
+        new_digits = Array(BaseType).new(other.internal_digits.size + 1 + i) { BASE_ZERO }
         # TODO: replace Int32 with Higher... and figure out the arithmetic overflow
         carry = HigherBufferType.zero
-        (other.digits.size).times do |j|
+        (other.internal_digits.size).times do |j|
           # temp_int = HigherBufferType.zero
           temp_int = HigherBufferType.zero
-          temp_int += digits[i]
-          temp_int *= other.digits[j]
+          temp_int += internal_digits[i]
+          temp_int *= other.internal_digits[j]
           temp_int += carry
           new_digits.unsafe_put(j + i, BASE_ZERO + (temp_int % BASE))
           carry = temp_int >> BASE_NUM_BITS
           # pp! new_digits.reverse, temp_int, carry, (temp_int % BASE)
         end
-        new_digits.unsafe_put(other.digits.size + i, BASE_ZERO + carry)
+        new_digits.unsafe_put(other.internal_digits.size + i, BASE_ZERO + carry)
         # puts "--------"
         # pp! new_digits.reverse
         temp = Bigger::Int.new(new_digits)
         prod += temp
       end
-      # pp! prod.digits.reverse
+      # pp! prod.internal_digits.reverse
       positive? ^ other.positive? ? -prod : prod
     end
 
@@ -452,7 +452,7 @@ module Bigger
     end
 
     def abs : Bigger::Int
-      Bigger::Int.new(digits.dup)
+      Bigger::Int.new(internal_digits.dup)
     end
 
     wrap_in_big_int(tdiv)
@@ -489,18 +489,18 @@ module Bigger
       -1
     end
 
-    # Returns the <=> operator of self's and other's digits as if they were both positive numbers
+    # Returns the <=> operator of self's and other's internal_digits as if they were both positive numbers
     protected def compare_digits(other : Bigger::Int) : Int32
       # puts caller.join("\n\t")
-      # pp! digits, other.digits
-      # Stupid heuristic - compare the number of digits
-      return 1 if digits.size > other.digits.size
-      return -1 if other.digits.size > digits.size
+      # pp! internal_digits, other.internal_digits
+      # Stupid heuristic - compare the number of internal_digits
+      return 1 if internal_digits.size > other.internal_digits.size
+      return -1 if other.internal_digits.size > internal_digits.size
 
-      # Ok, numbers have the same number of digits. Do a digit-wise comparison
-      (digits.size - 1).downto(0).each do |dig|
-        return 1 if digits[dig] > other.digits[dig]
-        return -1 if digits[dig] < other.digits[dig]
+      # Ok, numbers have the same number of internal_digits. Do a digit-wise comparison
+      (internal_digits.size - 1).downto(0).each do |dig|
+        return 1 if internal_digits[dig] > other.internal_digits[dig]
+        return -1 if internal_digits[dig] < other.internal_digits[dig]
       end
 
       # well, I guess they're the same
@@ -508,13 +508,13 @@ module Bigger
     end
 
     private def trim_outter_zeros
-      while @digits.size > 1 && @digits[-1] == BASE_ZERO
-        @digits.pop
+      while @internal_digits.size > 1 && @internal_digits[-1] == BASE_ZERO
+        @internal_digits.pop
       end
     end
 
     private def new_digits_of(other : Bigger::Int) : Array(BaseType)
-      Array(BaseType).new({digits.size, other.digits.size}.max + 1) { BASE_ZERO }
+      Array(BaseType).new({internal_digits.size, other.internal_digits.size}.max + 1) { BASE_ZERO }
     end
 
     # ============================ TO_* ================================
@@ -534,18 +534,18 @@ module Bigger
         {% unless wrap_digits %}raise OverflowError.new("Can't cast negative number to unsigned int") if {{type}} != "i" && negative?{% end %}
         num_digits = ({{num_bits}} // BASE_NUM_BITS)
         {% unless wrap_digits %}
-        raise OverflowError.new("Too many bits in bignum") if num_digits < digits.size
-        raise OverflowError.new("Can't cast to signed int") if num_digits == digits.size && {{type}} == "i" && (digits[-1] & (1 << (BASE_NUM_BITS - 1)) > 0)
+        raise OverflowError.new("Too many bits in bignum") if num_digits < internal_digits.size
+        raise OverflowError.new("Can't cast to signed int") if num_digits == internal_digits.size && {{type}} == "i" && (internal_digits[-1] & (1 << (BASE_NUM_BITS - 1)) > 0)
         {% end %}
 
         if BASE_NUM_BITS > {{num_bits}}
-          digits[0].to_{{type.id}}{{num_bits}}{% if wrap_digits %}!{% end %}
+          internal_digits[0].to_{{type.id}}{{num_bits}}{% if wrap_digits %}!{% end %}
         else
 
           {% if wrap_digits %}
-          digs = (self % BITS{{num_bits}}).digits
+          digs = (self % BITS{{num_bits}}).internal_digits
           {% else %}
-          digs = digits
+          digs = internal_digits
           {% end %}
 
           ret = 0{{type.id}}{{num_bits}}
@@ -577,13 +577,17 @@ module Bigger
     define_to_methods_for_bits(16)
     define_to_methods_for_bits(8)
 
-    def to_f : Float64
+    def to_f64 : Float64
       ret = 0f64
-      (digits.size - 1).downto(0) do |i|
-        ret += digits[i]
+      (internal_digits.size - 1).downto(0) do |i|
+        ret += internal_digits[i]
         ret *= BASE unless i == 0
       end
       ret
+    end
+
+    def to_f : Float64
+      to_f64
     end
 
     def to_big_f : Bigger::Int
@@ -595,28 +599,42 @@ module Bigger
     def inspect(io : IO) : Nil
       io << (positive? ? "+" : "-")
       io << "["
-      digits.reverse.each_with_index { |d, i| io << d.to_s.rjust(3); io << ", " unless i == (digits.size - 1) }
+      internal_digits.reverse.each_with_index { |d, i| io << d.to_s.rjust(3); io << ", " unless i == (internal_digits.size - 1) }
       io << "]"
       io << "("
       to_s(io)
       io << ")"
     end
 
+    def zero? : Bool
+      internal_digits.size == 1 && internal_digits[0].zero?
+    end
+
+    def digits(base = 10, *, absolute = false) : Array(Int32)
+      raise ArgumentError.new("Can't request digits of negative number") if negative? && !absolute
+      raise ArgumentError.new("Invalid base #{base}") if base == 1 || base == -1 || base == 0
+      return [0] if zero?
+
+      digs = [] of Int32
+      temp = self.abs
+      while temp > 0
+        quot, rem = temp.divmod(base)
+        digs << (rem).to_i
+        temp = quot
+      end
+      digs
+    end
+
     private def internal_to_s(base, precision, upcase = false, &)
       print_digits = (base == 62 ? DIGITS_BASE62 : (upcase ? DIGITS_UPCASE : DIGITS_DOWNCASE)).to_unsafe
-      if digits.size == 1 && digits[0].zero?
+      if zero?
         yield ['0'.ord.to_u8].to_unsafe, 1, false
       else
-        temp = self.abs
         str = [] of UInt8
-        # time_start = Time.monotonic
-        while temp > 0
-          quot, rem = temp.divmod(base)
-          str << print_digits[(rem).to_i]
-          temp = quot
+        digits(base, absolute: true).reverse.each do |i|
+          str << print_digits[i]
         end
-        # puts "Time to fill digits: #{(Time.monotonic - time_start).total_milliseconds}"
-        yield str.reverse.to_unsafe, str.size, negative?
+        yield str.to_unsafe, str.size, negative?
       end
     end
   end

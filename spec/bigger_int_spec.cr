@@ -22,7 +22,7 @@ Spectator.describe Bigger::Int do
     end
 
     macro expect_big_int(b, num, positive = true)
-      expect(({{b.id}}).digits).to eq array_of_digits({{num.id}})
+      expect(({{b.id}}).internal_digits).to eq array_of_digits({{num.id}})
       {% if positive %}expect(({{b.id}}).positive?).to be_true{% elsif positive == false %}expect(({{b.id}}).negative?).to be_true{% else %}{% end %}
     end
 
@@ -816,33 +816,33 @@ Spectator.describe Bigger::Int do
       expect(Bigger::Int.new(8).unsafe_shr(1)).to eq(4)
     end
 
-    #   describe "#digits" do
-    #     it "works for positive numbers or zero" do
-    #       0.to_bigger_i.digits.should eq([0])
-    #       1.to_bigger_i.digits.should eq([1])
-    #       10.to_bigger_i.digits.should eq([0, 1])
-    #       123.to_bigger_i.digits.should eq([3, 2, 1])
-    #       123456789.to_bigger_i.digits.should eq([9, 8, 7, 6, 5, 4, 3, 2, 1])
-    #     end
+    describe "#digits" do
+      it "works for positive numbers or zero" do
+        expect(0.to_bigger_i.digits).to eq([0])
+        expect(1.to_bigger_i.digits).to eq([1])
+        expect(10.to_bigger_i.digits).to eq([0, 1])
+        expect(123.to_bigger_i.digits).to eq([3, 2, 1])
+        expect(123456789.to_bigger_i.digits).to eq([9, 8, 7, 6, 5, 4, 3, 2, 1])
+      end
 
-    #     it "works with a base" do
-    #       123.to_bigger_i.digits(16).should eq([11, 7])
-    #     end
+      it "works with a base" do
+        expect(123.to_bigger_i.digits(16)).to eq([11, 7])
+      end
 
-    #     it "raises for invalid base" do
-    #       [1, 0, -1].each do |base|
-    #         expect_raises(ArgumentError, "Invalid base #{base}") do
-    #           123.to_bigger_i.digits(base)
-    #         end
-    #       end
-    #     end
+      it "raises for invalid base" do
+        [1, 0, -1].each do |base|
+          expect_raises(ArgumentError, "Invalid base #{base}") do
+            123.to_bigger_i.digits(base)
+          end
+        end
+      end
 
-    #     it "raises for negative numbers" do
-    #       expect_raises(ArgumentError, "Can't request digits of negative number") do
-    #         -123.to_bigger_i.digits
-    #       end
-    #     end
-    #   end
+      it "raises for negative numbers" do
+        expect_raises(ArgumentError, "Can't request digits of negative number") do
+          -123.to_bigger_i.digits
+        end
+      end
+    end
 
     #   describe "#divisible_by?" do
     #     it { 0.to_bigger_i.divisible_by?(0).should be_true }
