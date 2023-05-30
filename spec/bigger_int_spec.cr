@@ -844,29 +844,28 @@ Spectator.describe Bigger::Int do
       end
     end
 
-    #   describe "#divisible_by?" do
-    #     it { 0.to_bigger_i.divisible_by?(0).should be_true }
-    #     it { 0.to_bigger_i.divisible_by?(1).should be_true }
-    #     it { 0.to_bigger_i.divisible_by?(-1).should be_true }
-    #     it { 0.to_bigger_i.divisible_by?(0.to_bigger_i).should be_true }
-    #     it { 0.to_bigger_i.divisible_by?(1.to_bigger_i).should be_true }
-    #     it { 0.to_bigger_i.divisible_by?((-1).to_bigger_i).should be_true }
+    describe "#divisible_by?" do
+      it { expect(0.to_bigger_i.divisible_by?(0)).to be_true }
+      it { expect(0.to_bigger_i.divisible_by?(1)).to be_true }
+      it { expect(0.to_bigger_i.divisible_by?(-1)).to be_true }
+      it { expect(0.to_bigger_i.divisible_by?(0.to_bigger_i)).to be_true }
+      it { expect(0.to_bigger_i.divisible_by?(1.to_bigger_i)).to be_true }
+      it { expect(0.to_bigger_i.divisible_by?((-1).to_bigger_i)).to be_true }
 
-    #     it { 135.to_bigger_i.divisible_by?(0).should be_false }
-    #     it { 135.to_bigger_i.divisible_by?(1).should be_true }
-    #     it { 135.to_bigger_i.divisible_by?(2).should be_false }
-    #     it { 135.to_bigger_i.divisible_by?(3).should be_true }
-    #     it { 135.to_bigger_i.divisible_by?(4).should be_false }
-    #     it { 135.to_bigger_i.divisible_by?(5).should be_true }
-    #     it { 135.to_bigger_i.divisible_by?(135).should be_true }
-    #     it { 135.to_bigger_i.divisible_by?(270).should be_false }
+      it { expect(135.to_bigger_i.divisible_by?(0)).to be_false }
+      it { expect(135.to_bigger_i.divisible_by?(1)).to be_true }
+      it { expect(135.to_bigger_i.divisible_by?(2)).to be_false }
+      it { expect(135.to_bigger_i.divisible_by?(3)).to be_true }
+      it { expect(135.to_bigger_i.divisible_by?(4)).to be_false }
+      it { expect(135.to_bigger_i.divisible_by?(5)).to be_true }
+      it { expect(135.to_bigger_i.divisible_by?(135)).to be_true }
+      it { expect(135.to_bigger_i.divisible_by?(270)).to be_false }
 
-    #     it { "100000000000000000000000000000000".to_bigger_i.divisible_by?("4294967296".to_bigger_i).should be_true }
-    #     it { "100000000000000000000000000000000".to_bigger_i.divisible_by?("8589934592".to_bigger_i).should be_false }
-    #     it { "100000000000000000000000000000000".to_bigger_i.divisible_by?("23283064365386962890625".to_bigger_i).should be_true }
-    #     it { "100000000000000000000000000000000".to_bigger_i.divisible_by?("116415321826934814453125".to_bigger_i).should be_false }
-    #   end
-    # end
+      it { expect("100000000000000000000000000000000".to_bigger_i.divisible_by?("4294967296".to_bigger_i)).to be_true }
+      it { expect("100000000000000000000000000000000".to_bigger_i.divisible_by?("8589934592".to_bigger_i)).to be_false }
+      it { expect("100000000000000000000000000000000".to_bigger_i.divisible_by?("23283064365386962890625".to_bigger_i)).to be_true }
+      it { expect("100000000000000000000000000000000".to_bigger_i.divisible_by?("116415321826934814453125".to_bigger_i)).to be_false }
+    end
 
     # describe "Bigger::Int Math" do
     #   # TODO: after bigger float is implemented

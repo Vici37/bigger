@@ -142,11 +142,34 @@ module Bigger
     # Useful documentation: https://crystal-lang.org/reference/1.8/syntax_and_semantics/operators.html
     # GMP documentation: https://gmplib.org/manual/Concept-Index
 
+    macro wrap_in_big_int(operator, *, return_type = "Bigger::Int")
+      def {{operator.id}}(other : Int::Primitive) : {{return_type.id}}
+        # puts "calling primitive method {{operator.id}} with #{other}"
+        # puts "calling {{operator.id}} with primitive"
+        self.{{operator.id}} Bigger::Int.new(other)
+      end
+
+      # TODO: support any Int without somehow colliding with Bigger::Int also being an Int (stack overflow)
+      def {{operator.id}}(other : Int | ::Number) : {{return_type.id}}
+        # puts "calling int method {{operator.id}} with #{other}"
+        other.is_a?(Bigger::Int) ? (self.{{operator.id}} other) : (self.{{operator.id}} Bigger::Int.new(other))
+      end
+    end
+
     def //(other : Bigger::Int) : Bigger::Int
       divmod(self, other)[0]
     end
 
+    def divisible_by?(other : Bigger::Int) : Bool
+      return false if !zero? && other.zero?
+      divmod(other)[1] == 0
+    end
+
+    wrap_in_big_int("divisible_by?", return_type: Bool)
+
     private def divmod(first : Bigger::Int, second : Bigger::Int) : Tuple(Bigger::Int, Bigger::Int)
+      return {Bigger::Int.new, Bigger::Int.new} if first.zero? && second.zero?
+
       # Shortcut for if both numbers are of the same sign, and first is smaller than second. Then we can return 0 and second.
       return {Bigger::Int.new, first.clone} if first.positive? == second.positive? && second.compare_digits(first) == 1
       raise DivisionByZeroError.new if second.zero?
@@ -346,14 +369,6 @@ module Bigger
     bitwise_operator("|")
     bitwise_operator("&")
 
-    def ^(other : Bigger::Int) : Bigger::Int
-      new_digits = new_digits_of(other)
-      new_digits.size.times do |dig|
-        new_digits[dig] = (internal_digits[dig]? || BASE_ZERO) ^ (other.internal_digits[dig]? || BASE_ZERO)
-      end
-      Bigger::Int.new(new_digits)
-    end
-
     def /(other : Bigger::Int) : Bigger::Int
       self // other
     end
@@ -396,20 +411,6 @@ module Bigger
 
     def %(other : Bigger::Int) : Bigger::Int
       divmod(self, other)[1]
-    end
-
-    macro wrap_in_big_int(operator, *, return_type = "Bigger::Int")
-      def {{operator.id}}(other : Int::Primitive) : {{return_type.id}}
-        # puts "calling primitive method {{operator.id}} with #{other}"
-        # puts "calling {{operator.id}} with primitive"
-        self.{{operator.id}} Bigger::Int.new(other)
-      end
-
-      # TODO: support any Int without somehow colliding with Bigger::Int also being an Int (stack overflow)
-      def {{operator.id}}(other : Int | ::Number) : {{return_type.id}}
-        # puts "calling int method {{operator.id}} with #{other}"
-        other.is_a?(Bigger::Int) ? (self.{{operator.id}} other) : (self.{{operator.id}} Bigger::Int.new(other))
-      end
     end
 
     wrap_in_big_int("//")
