@@ -194,6 +194,10 @@ module Bigger
       {quotient, first - (quotient * second)}
     end
 
+    def >>(other : Int) : Bigger::Int
+      self.>>(other.to_i32)
+    end
+
     def >>(other : Int32) : Bigger::Int
       return self << -other if other < 0
 
@@ -210,6 +214,10 @@ module Bigger
       end
 
       Bigger::Int.new(new_digits)
+    end
+
+    def <<(other : Int) : Bigger::Int
+      self.<<(other.to_i32)
     end
 
     def <<(other : Int32) : Bigger::Int
@@ -570,9 +578,12 @@ module Bigger
     define_to_methods_for_bits(8)
 
     def to_f : Float64
-      # puts "to_f"
-      # TODO
-      0f64
+      ret = 0f64
+      (digits.size - 1).downto(0) do |i|
+        ret += digits[i]
+        ret *= BASE unless i == 0
+      end
+      ret
     end
 
     def to_big_f : Bigger::Int

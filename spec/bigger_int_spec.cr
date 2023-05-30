@@ -774,97 +774,97 @@ Spectator.describe Bigger::Int do
       end
     end
 
-    #   it "can cast UInt64::MAX to UInt64 (#2264)" do
-    #     Bigger::Int.new(UInt64::MAX).to_u64.should eq(UInt64::MAX)
-    #   end
+    it "can cast UInt64::MAX to UInt64 (#2264)" do
+      expect(Bigger::Int.new(UInt64::MAX).to_u64).to eq(UInt64::MAX)
+    end
 
-    #   it "does String#to_big_i" do
-    #     "123456789123456789".to_big_i.should eq(Bigger::Int.new("123456789123456789"))
-    #     "abcabcabcabcabcabc".to_big_i(base: 16).should eq(Bigger::Int.new("3169001976782853491388"))
-    #   end
+    it "does String#to_bigger_i" do
+      expect("123456789123456789".to_bigger_i).to eq(Bigger::Int.new("123456789123456789"))
+      expect("abcabcabcabcabcabc".to_bigger_i(base: 16)).to eq(Bigger::Int.new("3169001976782853491388"))
+    end
 
-    #   it "does popcount" do
-    #     5.to_big_i.popcount.should eq(2)
-    #   end
+    it "does popcount" do
+      expect(5.to_bigger_i.popcount).to eq(2)
+    end
 
-    #   it "#trailing_zeros_count" do
-    #     "00000000000000001000000000001000".to_big_i(base: 2).trailing_zeros_count.should eq(3)
-    #   end
+    it "#trailing_zeros_count" do
+      expect("00000000000000001000000000001000".to_bigger_i(base: 2).trailing_zeros_count).to eq(3)
+    end
 
-    #   it "#hash" do
-    #     b1 = 5.to_big_i
-    #     b2 = 5.to_big_i
-    #     b3 = -6.to_big_i
+    it "#hash" do
+      b1 = 5.to_bigger_i
+      b2 = 5.to_bigger_i
+      b3 = -6.to_bigger_i
 
-    #     b1.hash.should eq(b2.hash)
-    #     b1.hash.should_not eq(b3.hash)
+      expect(b1.hash).to eq(b2.hash)
+      expect(b1.hash).to_not eq(b3.hash)
 
-    #     b3.hash.should eq((-6).hash)
-    #   end
+      expect(b3.hash).to eq((-6).hash)
+    end
 
-    #   it "clones" do
-    #     x = 1.to_big_i
-    #     x.clone.should eq(x)
-    #   end
+    it "clones" do
+      x = 1.to_bigger_i
+      expect(x.clone).to eq(x)
+    end
 
-    #   describe "#humanize_bytes" do
-    #     it { Bigger::Int.new("1180591620717411303424").humanize_bytes.should eq("1.0ZiB") }
-    #     it { Bigger::Int.new("1208925819614629174706176").humanize_bytes.should eq("1.0YiB") }
-    #   end
+    describe "#humanize_bytes" do
+      it { expect(Bigger::Int.new("1180591620717411303424").humanize_bytes).to eq("1.0ZiB") }
+      it { expect(Bigger::Int.new("1208925819614629174706176").humanize_bytes).to eq("1.0YiB") }
+    end
 
-    #   it "has unsafe_shr (#8691)" do
-    #     Bigger::Int.new(8).unsafe_shr(1).should eq(4)
-    #   end
+    it "has unsafe_shr (#8691)" do
+      expect(Bigger::Int.new(8).unsafe_shr(1)).to eq(4)
+    end
 
     #   describe "#digits" do
     #     it "works for positive numbers or zero" do
-    #       0.to_big_i.digits.should eq([0])
-    #       1.to_big_i.digits.should eq([1])
-    #       10.to_big_i.digits.should eq([0, 1])
-    #       123.to_big_i.digits.should eq([3, 2, 1])
-    #       123456789.to_big_i.digits.should eq([9, 8, 7, 6, 5, 4, 3, 2, 1])
+    #       0.to_bigger_i.digits.should eq([0])
+    #       1.to_bigger_i.digits.should eq([1])
+    #       10.to_bigger_i.digits.should eq([0, 1])
+    #       123.to_bigger_i.digits.should eq([3, 2, 1])
+    #       123456789.to_bigger_i.digits.should eq([9, 8, 7, 6, 5, 4, 3, 2, 1])
     #     end
 
     #     it "works with a base" do
-    #       123.to_big_i.digits(16).should eq([11, 7])
+    #       123.to_bigger_i.digits(16).should eq([11, 7])
     #     end
 
     #     it "raises for invalid base" do
     #       [1, 0, -1].each do |base|
     #         expect_raises(ArgumentError, "Invalid base #{base}") do
-    #           123.to_big_i.digits(base)
+    #           123.to_bigger_i.digits(base)
     #         end
     #       end
     #     end
 
     #     it "raises for negative numbers" do
     #       expect_raises(ArgumentError, "Can't request digits of negative number") do
-    #         -123.to_big_i.digits
+    #         -123.to_bigger_i.digits
     #       end
     #     end
     #   end
 
     #   describe "#divisible_by?" do
-    #     it { 0.to_big_i.divisible_by?(0).should be_true }
-    #     it { 0.to_big_i.divisible_by?(1).should be_true }
-    #     it { 0.to_big_i.divisible_by?(-1).should be_true }
-    #     it { 0.to_big_i.divisible_by?(0.to_big_i).should be_true }
-    #     it { 0.to_big_i.divisible_by?(1.to_big_i).should be_true }
-    #     it { 0.to_big_i.divisible_by?((-1).to_big_i).should be_true }
+    #     it { 0.to_bigger_i.divisible_by?(0).should be_true }
+    #     it { 0.to_bigger_i.divisible_by?(1).should be_true }
+    #     it { 0.to_bigger_i.divisible_by?(-1).should be_true }
+    #     it { 0.to_bigger_i.divisible_by?(0.to_bigger_i).should be_true }
+    #     it { 0.to_bigger_i.divisible_by?(1.to_bigger_i).should be_true }
+    #     it { 0.to_bigger_i.divisible_by?((-1).to_bigger_i).should be_true }
 
-    #     it { 135.to_big_i.divisible_by?(0).should be_false }
-    #     it { 135.to_big_i.divisible_by?(1).should be_true }
-    #     it { 135.to_big_i.divisible_by?(2).should be_false }
-    #     it { 135.to_big_i.divisible_by?(3).should be_true }
-    #     it { 135.to_big_i.divisible_by?(4).should be_false }
-    #     it { 135.to_big_i.divisible_by?(5).should be_true }
-    #     it { 135.to_big_i.divisible_by?(135).should be_true }
-    #     it { 135.to_big_i.divisible_by?(270).should be_false }
+    #     it { 135.to_bigger_i.divisible_by?(0).should be_false }
+    #     it { 135.to_bigger_i.divisible_by?(1).should be_true }
+    #     it { 135.to_bigger_i.divisible_by?(2).should be_false }
+    #     it { 135.to_bigger_i.divisible_by?(3).should be_true }
+    #     it { 135.to_bigger_i.divisible_by?(4).should be_false }
+    #     it { 135.to_bigger_i.divisible_by?(5).should be_true }
+    #     it { 135.to_bigger_i.divisible_by?(135).should be_true }
+    #     it { 135.to_bigger_i.divisible_by?(270).should be_false }
 
-    #     it { "100000000000000000000000000000000".to_big_i.divisible_by?("4294967296".to_big_i).should be_true }
-    #     it { "100000000000000000000000000000000".to_big_i.divisible_by?("8589934592".to_big_i).should be_false }
-    #     it { "100000000000000000000000000000000".to_big_i.divisible_by?("23283064365386962890625".to_big_i).should be_true }
-    #     it { "100000000000000000000000000000000".to_big_i.divisible_by?("116415321826934814453125".to_big_i).should be_false }
+    #     it { "100000000000000000000000000000000".to_bigger_i.divisible_by?("4294967296".to_bigger_i).should be_true }
+    #     it { "100000000000000000000000000000000".to_bigger_i.divisible_by?("8589934592".to_bigger_i).should be_false }
+    #     it { "100000000000000000000000000000000".to_bigger_i.divisible_by?("23283064365386962890625".to_bigger_i).should be_true }
+    #     it { "100000000000000000000000000000000".to_bigger_i.divisible_by?("116415321826934814453125".to_bigger_i).should be_false }
     #   end
     # end
 
@@ -879,21 +879,21 @@ Spectator.describe Bigger::Int do
     #   end
 
     #   it "pw2ceil" do
-    #     Math.pw2ceil("-100000000000000000000000000000000".to_big_i).should eq(1.to_big_i)
-    #     Math.pw2ceil(-1234567.to_big_i).should eq(1.to_big_i)
-    #     Math.pw2ceil(-1.to_big_i).should eq(1.to_big_i)
-    #     Math.pw2ceil(0.to_big_i).should eq(1.to_big_i)
-    #     Math.pw2ceil(1.to_big_i).should eq(1.to_big_i)
-    #     Math.pw2ceil(2.to_big_i).should eq(2.to_big_i)
-    #     Math.pw2ceil(3.to_big_i).should eq(4.to_big_i)
-    #     Math.pw2ceil(4.to_big_i).should eq(4.to_big_i)
-    #     Math.pw2ceil(5.to_big_i).should eq(8.to_big_i)
-    #     Math.pw2ceil(32.to_big_i).should eq(32.to_big_i)
-    #     Math.pw2ceil(33.to_big_i).should eq(64.to_big_i)
-    #     Math.pw2ceil(64.to_big_i).should eq(64.to_big_i)
-    #     Math.pw2ceil(2.to_big_i ** 12345 - 1).should eq(2.to_big_i ** 12345)
-    #     Math.pw2ceil(2.to_big_i ** 12345).should eq(2.to_big_i ** 12345)
-    #     Math.pw2ceil(2.to_big_i ** 12345 + 1).should eq(2.to_big_i ** 12346)
+    #     Math.pw2ceil("-100000000000000000000000000000000".to_bigger_i).should eq(1.to_bigger_i)
+    #     Math.pw2ceil(-1234567.to_bigger_i).should eq(1.to_bigger_i)
+    #     Math.pw2ceil(-1.to_bigger_i).should eq(1.to_bigger_i)
+    #     Math.pw2ceil(0.to_bigger_i).should eq(1.to_bigger_i)
+    #     Math.pw2ceil(1.to_bigger_i).should eq(1.to_bigger_i)
+    #     Math.pw2ceil(2.to_bigger_i).should eq(2.to_bigger_i)
+    #     Math.pw2ceil(3.to_bigger_i).should eq(4.to_bigger_i)
+    #     Math.pw2ceil(4.to_bigger_i).should eq(4.to_bigger_i)
+    #     Math.pw2ceil(5.to_bigger_i).should eq(8.to_bigger_i)
+    #     Math.pw2ceil(32.to_bigger_i).should eq(32.to_bigger_i)
+    #     Math.pw2ceil(33.to_bigger_i).should eq(64.to_bigger_i)
+    #     Math.pw2ceil(64.to_bigger_i).should eq(64.to_bigger_i)
+    #     Math.pw2ceil(2.to_bigger_i ** 12345 - 1).should eq(2.to_bigger_i ** 12345)
+    #     Math.pw2ceil(2.to_bigger_i ** 12345).should eq(2.to_bigger_i ** 12345)
+    #     Math.pw2ceil(2.to_bigger_i ** 12345 + 1).should eq(2.to_bigger_i ** 12346)
     #   end
   end
 end
