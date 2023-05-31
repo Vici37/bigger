@@ -75,7 +75,6 @@ module Bigger
         inp = inp >> BASE_NUM_BITS
       end
       @internal_digits << BASE_ZERO if @internal_digits.empty?
-      # puts "init from int primitive #{inp}: #{internal_digits}"
     end
 
     def initialize(inp : ::Int::Primitive)
@@ -86,7 +85,6 @@ module Bigger
         inp = inp >> BASE_NUM_BITS
       end
       @internal_digits << BASE_ZERO if @internal_digits.empty?
-      # puts "init from int primitive #{inp}: #{internal_digits}"
     end
 
     def initialize(inp : ::Number)
@@ -99,7 +97,6 @@ module Bigger
 
     def initialize
       @internal_digits << BASE_ZERO
-      # puts "init to zero"
     end
 
     def sign : Int32
@@ -116,12 +113,10 @@ module Bigger
     end
 
     def popcount
-      # puts "popcount"
       @internal_digits.sum(&.popcount)
     end
 
     def trailing_zeros_count
-      # puts "trailing_zeros_count"
       count = 0
       @internal_digits.each do |digit|
         count += digit.trailing_zeros_count
@@ -141,25 +136,21 @@ module Bigger
     end
 
     def clone : Bigger::Int
-      # puts "clone"
-      # TODO
-      self
+      Bigger::Int.new(internal_digits.dup, @sign)
     end
 
     # ============================ OPERATORS ============================
     # Useful documentation: https://crystal-lang.org/reference/1.8/syntax_and_semantics/operators.html
     # GMP documentation: https://gmplib.org/manual/Concept-Index
+    # Modern Computer Arithmetic PDF: https://maths-people.anu.edu.au/~brent/pd/mca-cup-0.5.9.pdf
 
+    # Helpful macro to "wrap" all methods to forward to the Bigger::Int version of the method
     macro wrap_in_big_int(operator, *, return_type = "Bigger::Int")
       def {{operator.id}}(other : Int::Primitive) : {{return_type.id}}
-        # puts "calling primitive method {{operator.id}} with #{other}"
-        # puts "calling {{operator.id}} with primitive"
         self.{{operator.id}} Bigger::Int.new(other)
       end
 
-      # TODO: support any Int without somehow colliding with Bigger::Int also being an Int (stack overflow)
       def {{operator.id}}(other : Int | ::Number) : {{return_type.id}}
-        # puts "calling int method {{operator.id}} with #{other}"
         other.is_a?(Bigger::Int) ? (self.{{operator.id}} other) : (self.{{operator.id}} Bigger::Int.new(other))
       end
     end
@@ -179,15 +170,15 @@ module Bigger
     private def divmod(first : Bigger::Int, second : Bigger::Int) : Tuple(Bigger::Int, Bigger::Int)
       # Shortcut for if both numbers are of the same sign, and first is smaller than second. Then we can return 0 and second.
       return {Bigger::Int.new, first.clone} if first.positive? == second.positive? && second.compare_digits(first) == 1
+
       raise DivisionByZeroError.new if second.zero?
 
       # TODO: more efficient use case, need to handle negatives
       # if first.internal_digits.size == 1 && second.internal_digits.size == 1
       #   return first.internal_digits[0].divmod(second.internal_digits[0]).map { |i| Bigger::Int.new(i) }
       # end
-      second_abs = second.abs
 
-      # pp! first.internal_digits, first.positive?, second.internal_digits, second.positive?
+      second_abs = second.abs
 
       remainder = Bigger::Int.new
       temp = Bigger::Int.new
@@ -195,19 +186,10 @@ module Bigger
       (first.internal_digits.size - 1).downto(0).each do |i|
         remainder.internal_digits[0] = first.internal_digits[i]
         temp = Bigger::Int.new(0)
-        # new_digits[i] = BASE_ZERO + ((BASE_ZERO..BaseType::MAX).bsearch do |bser|
-        #   ((bser &+ 1) * second_abs + temp) > remainder
-        # end || BASE_ZERO)
         new_digits[i] = BASE_ZERO + ((HigherBufferType.zero..BASE).bsearch do |bser|
           ((bser &+ 1) * second_abs + temp) > remainder
         end || BASE_ZERO)
         temp += (second_abs * new_digits[i])
-        # while remainder >= (temp + second_abs)
-        #   new_digits[i] += 1
-        #   temp += second_abs
-        # end
-        # puts new_digits[i]
-        # puts "------"
         remainder -= temp
         remainder = remainder << BASE_NUM_BITS
       end
@@ -215,17 +197,10 @@ module Bigger
       should_be_positive = first.positive? == second.positive?
       quotient = Bigger::Int.new(new_digits, first.positive? == second.positive?)
 
-      # pp! quotient.internal_digits, remainder.internal_digits
       if !should_be_positive && remainder > 0
         quotient -= 1
-        # remainder -= 1 unless second.negative?
       end
       remainder = -remainder if second.negative?
-      # puts "Final:"
-      # pp! quotient.internal_digits, quotient.positive?
-      # pp! remainder.internal_digits, (first - (quotient * second)).internal_digits
-      # pp! (quotient * second).internal_digits, (quotient * second).positive?
-      # puts "---------------------------"
       {quotient, first - (quotient * second)}
     end
 
@@ -256,17 +231,11 @@ module Bigger
     end
 
     def <<(other : Int32) : Bigger::Int
-      # start = Time.monotonic
-      # puts "Start << #{other} from: #{caller.join("\n\t")}"
       return self >> -other if other < 0
       start_idx = other // BASE_NUM_BITS
-      # puts "#{(Time.monotonic - start).total_milliseconds}: Established start index #{start_idx}"
       other %= BASE_NUM_BITS
-      # puts "#{(Time.monotonic - start).total_milliseconds}: Calculated the rest (other): #{other}"
       new_digits = Array(BaseType).new(internal_digits.size + start_idx) { BASE_ZERO }
-      # puts "#{(Time.monotonic - start).total_milliseconds}: new_digits array initialized with size #{new_digits.size}"
       new_digits[start_idx, internal_digits.size] = internal_digits
-      # puts "#{(Time.monotonic - start).total_milliseconds}: copied internal digits"
 
       return Bigger::Int.new(new_digits) if other.zero?
 
@@ -274,16 +243,13 @@ module Bigger
       offset = BASE_NUM_BITS - other
       new_digits << BASE_ZERO
 
-      # puts "#{(Time.monotonic - start).total_milliseconds}: Starting loop"
       start_idx.upto(internal_digits.size + start_idx - 1).each do |i|
         temp = internal_digits[i - start_idx] >> offset
         new_digits[i] = (internal_digits[i - start_idx] << other) + carry_over
         carry_over = temp
-        # puts "#{(Time.monotonic - start).total_milliseconds}: Done 1 iteration"
       end
       new_digits[-1] = carry_over
 
-      # puts "#{(Time.monotonic - start).total_milliseconds}: Done"
       Bigger::Int.new(new_digits)
     end
 
@@ -380,30 +346,27 @@ module Bigger
     # Implement more efficient version of this operator (if possible, might just need to optimize multiplication)
     # end
 
+    # TODO
+    # wrap_in_big_int("**")
+
     def *(other : Bigger::Int) : Bigger::Int
       prod = Bigger::Int.new
-      # pp! internal_digits, other.internal_digits
       (internal_digits.size).times do |i|
         new_digits = Array(BaseType).new(other.internal_digits.size + 1 + i) { BASE_ZERO }
         # TODO: replace Int32 with Higher... and figure out the arithmetic overflow
         carry = HigherBufferType.zero
         (other.internal_digits.size).times do |j|
-          # temp_int = HigherBufferType.zero
           temp_int = HigherBufferType.zero
           temp_int += internal_digits[i]
           temp_int *= other.internal_digits[j]
           temp_int += carry
           new_digits.unsafe_put(j + i, BASE_ZERO + (temp_int % BASE))
           carry = temp_int >> BASE_NUM_BITS
-          # pp! new_digits.reverse, temp_int, carry, (temp_int % BASE)
         end
         new_digits.unsafe_put(other.internal_digits.size + i, BASE_ZERO + carry)
-        # puts "--------"
-        # pp! new_digits.reverse
         temp = Bigger::Int.new(new_digits)
         prod += temp
       end
-      # pp! prod.internal_digits.reverse
       positive? ^ other.positive? ? -prod : prod
     end
 
@@ -416,7 +379,7 @@ module Bigger
     end
 
     wrap_in_big_int("//")
-    # TODO
+    # TODO: Current bitshifts only accept Int32. Should this be increased?
     # wrap_in_big_int(">>")
     # wrap_in_big_int("<<")
     wrap_in_big_int("<=>", return_type: "Int32")
@@ -431,8 +394,6 @@ module Bigger
     wrap_in_big_int("&")
     wrap_in_big_int("|")
     wrap_in_big_int("^")
-
-    # wrap_in_big_int("**")
 
     # ============================ OTHER ================================
 
@@ -478,8 +439,6 @@ module Bigger
     wrap_in_big_int(unsafe_shr)
 
     def <=>(other : Bigger::Int) : Int32
-      # puts "Comparing other bigger int"
-      # pp! negative?, other.negative?
       return 1 if positive? && other.negative?
       return -1 if negative? && other.positive?
 
@@ -494,8 +453,6 @@ module Bigger
 
     # Returns the <=> operator of self's and other's internal_digits as if they were both positive numbers
     protected def compare_digits(other : Bigger::Int) : Int32
-      # puts caller.join("\n\t")
-      # pp! internal_digits, other.internal_digits
       # Stupid heuristic - compare the number of internal_digits
       return 1 if internal_digits.size > other.internal_digits.size
       return -1 if other.internal_digits.size > internal_digits.size
@@ -594,7 +551,6 @@ module Bigger
     end
 
     def to_big_f : Bigger::Int
-      # puts "to_big_f"
       # TODO: should be actually bigger_f
       self
     end
