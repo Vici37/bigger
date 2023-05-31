@@ -1,23 +1,31 @@
 module Bigger
   struct Int < ::Int
     # This block causes internal_digits to be UInt8, which limits the size bigger ints, but makes testsing contrived cases easier.
+    {% if flag?(:dev) %}
+      {% puts "Compiling for development using UInt8 as BaseType" %}
     alias BaseType = UInt8
     alias HigherBufferType = UInt16
     BASE_ONE = 1u8
 
+    {% verbatim do %}
     macro to_basetype(whatever, *, args = nil)
       ({{whatever.id}}).to_u8{% if args %}({{args}}){% end %}
     end
+    {% end %}
+    {% else %}
 
     # This block is more for "production" (real) use of this library, increasing the size of bigger nums, and a good per boost.
     # TODO: look into using UInt64 instead of UInt32 for internal_digits?
-    # alias BaseType = UInt32
-    # alias HigherBufferType = UInt64
-    # BASE_ONE = 1u32
+    alias BaseType = UInt32
+    alias HigherBufferType = UInt64
+    BASE_ONE = 1u32
 
-    # macro to_basetype(whatever, *, args = nil)
-    #   ({{whatever.id}}).to_u32{% if args %}({{args}}){% end %}
-    # end
+    {% verbatim do %}
+    macro to_basetype(whatever, *, args = nil)
+      ({{whatever.id}}).to_u32{% if args %}({{args}}){% end %}
+    end
+    {% end %}
+    {% end %}
 
     # ONLY ONE OF THE TWO ABOVE BLOCKS SHOULD BE UNCOMMENTED, BUT AT LEAST ONE OF THEM NEEDS TO BE
 
@@ -550,7 +558,7 @@ module Bigger
             ret |= (digs[i].to_u{{num_bits}} << offset)
             offset += BASE_NUM_BITS
           end
-          {% if type == "i" %}ret = -ret if negative? && digs.size < num_digits{% end %}
+          {% if type == "i" && !wrap_digits %}ret = -ret if negative? && ret < BITS{{num_bits - 1}}{% end %}
           ret
         end
       end

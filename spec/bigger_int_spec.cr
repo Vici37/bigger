@@ -1,12 +1,5 @@
 require "./spec_helper"
 
-# private def it_converts_to_s(num, str, *, file = __FILE__, line = __LINE__, **opts)
-#   it file: file, line: line do
-#     num.to_s(**opts).should eq(str), file: file, line: line
-#     String.build { |io| num.to_s(io, **opts) }.should eq(str), file: file, line: line
-#   end
-# end
-
 Spectator.describe Bigger::Int do
   context "base tests" do
     # Calculates the expected numbers of the digits array based on base size

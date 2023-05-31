@@ -1,5 +1,5 @@
 module Math
-  # TODO
+  # TODO: Implement when bigger float is implemented
   # def sqrt(num : Bigger::Int) : Bigger::Float
 
   # end
@@ -24,7 +24,6 @@ module Math
 
   def pw2ceil(num : Bigger::Int) : Bigger::Int
     return Bigger::Int.new(1) if num.negative? || num.zero?
-    start_time
     ret = num.clone
     digs = ret.internal_digits
     if digs[-1] & (1 << (Bigger::Int::BASE_NUM_BITS - 1)) > 0 && digs[0..-2].reduce(0) { |acc, i| acc | i } > 0
