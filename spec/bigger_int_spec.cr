@@ -867,32 +867,40 @@ Spectator.describe Bigger::Int do
       it { expect("100000000000000000000000000000000".to_bigger_i.divisible_by?("116415321826934814453125".to_bigger_i)).to be_false }
     end
 
-    # describe "Bigger::Int Math" do
-    #   # TODO: after bigger float is implemented
-    #   # it "sqrt" do
-    #   #   Math.sqrt(Bigger::Int.new("1" + "0"*48)).should eq(BigFloat.new("1" + "0"*24))
-    #   # end
+    describe "Bigger::Int Math" do
+      # TODO: after bigger float is implemented
+      # it "sqrt" do
+      #   expect(Math.sqrt(Bigger::Int.new("1" + "0"*48))).to eq(BigFloat.new("1" + "0"*24))
+      # end
 
-    #   it "isqrt" do
-    #     Math.isqrt(Bigger::Int.new("1" + "0"*48)).should eq(Bigger::Int.new("1" + "0"*24))
-    #   end
+      describe "isqrt" do
+        it { expect_raises(ArgumentError) { Math.isqrt(Bigger::Int.new(-2)) } }
+        it { expect(Math.isqrt(Bigger::Int.new(1))).to eq(Bigger::Int.new(1)) }
+        it { expect(Math.isqrt(Bigger::Int.new(4))).to eq(Bigger::Int.new(2)) }
+        it { expect(Math.isqrt(Bigger::Int.new(9))).to eq(Bigger::Int.new(3)) }
+        it { expect(Math.isqrt(Bigger::Int.new(16))).to eq(Bigger::Int.new(4)) }
+        it { expect(Math.isqrt(Bigger::Int.new("1" + "0"*48))).to eq(Bigger::Int.new("1" + "0"*24)) }
+      end
 
-    #   it "pw2ceil" do
-    #     Math.pw2ceil("-100000000000000000000000000000000".to_bigger_i).should eq(1.to_bigger_i)
-    #     Math.pw2ceil(-1234567.to_bigger_i).should eq(1.to_bigger_i)
-    #     Math.pw2ceil(-1.to_bigger_i).should eq(1.to_bigger_i)
-    #     Math.pw2ceil(0.to_bigger_i).should eq(1.to_bigger_i)
-    #     Math.pw2ceil(1.to_bigger_i).should eq(1.to_bigger_i)
-    #     Math.pw2ceil(2.to_bigger_i).should eq(2.to_bigger_i)
-    #     Math.pw2ceil(3.to_bigger_i).should eq(4.to_bigger_i)
-    #     Math.pw2ceil(4.to_bigger_i).should eq(4.to_bigger_i)
-    #     Math.pw2ceil(5.to_bigger_i).should eq(8.to_bigger_i)
-    #     Math.pw2ceil(32.to_bigger_i).should eq(32.to_bigger_i)
-    #     Math.pw2ceil(33.to_bigger_i).should eq(64.to_bigger_i)
-    #     Math.pw2ceil(64.to_bigger_i).should eq(64.to_bigger_i)
-    #     Math.pw2ceil(2.to_bigger_i ** 12345 - 1).should eq(2.to_bigger_i ** 12345)
-    #     Math.pw2ceil(2.to_bigger_i ** 12345).should eq(2.to_bigger_i ** 12345)
-    #     Math.pw2ceil(2.to_bigger_i ** 12345 + 1).should eq(2.to_bigger_i ** 12346)
-    #   end
+      describe "pw2ceil" do
+        it { expect(Math.pw2ceil("-100000000000000000000000000000000".to_bigger_i)).to eq(1.to_bigger_i) }
+        it { expect(Math.pw2ceil(-1234567.to_bigger_i)).to eq(1.to_bigger_i) }
+        it { expect(Math.pw2ceil(-1.to_bigger_i)).to eq(1.to_bigger_i) }
+        it { expect(Math.pw2ceil(0.to_bigger_i)).to eq(1.to_bigger_i) }
+        it { expect(Math.pw2ceil(1.to_bigger_i)).to eq(1.to_bigger_i) }
+        it { expect(Math.pw2ceil(2.to_bigger_i)).to eq(2.to_bigger_i) }
+        it { expect(Math.pw2ceil(3.to_bigger_i)).to eq(4.to_bigger_i) }
+        it { expect(Math.pw2ceil(4.to_bigger_i)).to eq(4.to_bigger_i) }
+        it { expect(Math.pw2ceil(5.to_bigger_i)).to eq(8.to_bigger_i) }
+        it { expect(Math.pw2ceil(32.to_bigger_i)).to eq(32.to_bigger_i) }
+        it { expect(Math.pw2ceil(33.to_bigger_i)).to eq(64.to_bigger_i) }
+        it { expect(Math.pw2ceil(511.to_bigger_i)).to eq(512.to_bigger_i) }
+        it { expect(Math.pw2ceil(64.to_bigger_i)).to eq(64.to_bigger_i) }
+        it { expect(Math.pw2ceil((1.to_bigger_i << 12345) - 1)).to eq(1.to_bigger_i << 12345) }
+        it { expect(Math.pw2ceil(1.to_bigger_i << 7)).to eq(1.to_bigger_i << 7) }
+        it { expect(Math.pw2ceil(1.to_bigger_i << 12345)).to eq(1.to_bigger_i << 12345) }
+        it { expect(Math.pw2ceil(1.to_bigger_i << 12345 + 1)).to eq(1.to_bigger_i << 12346) }
+      end
+    end
   end
 end

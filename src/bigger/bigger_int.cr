@@ -162,17 +162,21 @@ module Bigger
 
     def divisible_by?(other : Bigger::Int) : Bool
       return false if !zero? && other.zero?
+      return true if zero? && other.zero?
       divmod(other)[1] == 0
     end
 
     wrap_in_big_int("divisible_by?", return_type: Bool)
 
     private def divmod(first : Bigger::Int, second : Bigger::Int) : Tuple(Bigger::Int, Bigger::Int)
-      return {Bigger::Int.new, Bigger::Int.new} if first.zero? && second.zero?
-
       # Shortcut for if both numbers are of the same sign, and first is smaller than second. Then we can return 0 and second.
       return {Bigger::Int.new, first.clone} if first.positive? == second.positive? && second.compare_digits(first) == 1
       raise DivisionByZeroError.new if second.zero?
+
+      # TODO: more efficient use case, need to handle negatives
+      # if first.internal_digits.size == 1 && second.internal_digits.size == 1
+      #   return first.internal_digits[0].divmod(second.internal_digits[0]).map { |i| Bigger::Int.new(i) }
+      # end
       second_abs = second.abs
 
       # pp! first.internal_digits, first.positive?, second.internal_digits, second.positive?
@@ -244,17 +248,17 @@ module Bigger
     end
 
     def <<(other : Int32) : Bigger::Int
+      # start = Time.monotonic
+      # puts "Start << #{other} from: #{caller.join("\n\t")}"
       return self >> -other if other < 0
-      # puts "#{Time.monotonic}: Starting shift left with #{internal_digits}, from:\n#{caller.join("\n\t")}"
       start_idx = other // BASE_NUM_BITS
-      # puts "#{Time.monotonic}: Start index: #{start_idx}"
+      # puts "#{(Time.monotonic - start).total_milliseconds}: Established start index #{start_idx}"
       other %= BASE_NUM_BITS
-      # puts "#{Time.monotonic}: Other: #{other}"
+      # puts "#{(Time.monotonic - start).total_milliseconds}: Calculated the rest (other): #{other}"
       new_digits = Array(BaseType).new(internal_digits.size + start_idx) { BASE_ZERO }
-      # puts "#{Time.monotonic}: New internal_digits initialized"
+      # puts "#{(Time.monotonic - start).total_milliseconds}: new_digits array initialized with size #{new_digits.size}"
       new_digits[start_idx, internal_digits.size] = internal_digits
-      # puts "#{Time.monotonic}: New internal_digits at start index up to #{internal_digits.size} copied"
-      # pp! start_idx, other, new_digits, new_digits.map(&.to_s(2))
+      # puts "#{(Time.monotonic - start).total_milliseconds}: copied internal digits"
 
       return Bigger::Int.new(new_digits) if other.zero?
 
@@ -262,18 +266,16 @@ module Bigger
       offset = BASE_NUM_BITS - other
       new_digits << BASE_ZERO
 
-      # puts "#{Time.monotonic}: Starting loop"
+      # puts "#{(Time.monotonic - start).total_milliseconds}: Starting loop"
       start_idx.upto(internal_digits.size + start_idx - 1).each do |i|
-        # puts "\t#{Time.monotonic}: Index #{i}"
-        # pp! i, new_digits, new_digits.map(&.to_s(2))
         temp = internal_digits[i - start_idx] >> offset
         new_digits[i] = (internal_digits[i - start_idx] << other) + carry_over
         carry_over = temp
+        # puts "#{(Time.monotonic - start).total_milliseconds}: Done 1 iteration"
       end
       new_digits[-1] = carry_over
-      # puts "\t#{Time.monotonic}: Final: #{new_digits}"
-      # pp! new_digits, new_digits.map(&.to_s(2))
 
+      # puts "#{(Time.monotonic - start).total_milliseconds}: Done"
       Bigger::Int.new(new_digits)
     end
 
@@ -317,14 +319,6 @@ module Bigger
     # It's assumed the signs of the numbers have already been determined and this difference is needed
     # TODO: find a way to optimize this
     private def subtract_smaller_from_larger(first : Bigger::Int, second : Bigger::Int) : Tuple(Array(BaseType), Bool)
-      # borrow = BASE_ZERO
-      # new_digits = Array(BaseType).new({first.internal_digits.size, second.internal_digits.size}.max) { BASE_ZERO }
-      # new_digits.size.times do |dig|
-      #   temp = HigherBufferType.zero + (first.internal_digits[dig]? || BASE_ZERO) - (second.internal_digits[dig]? || BASE_ZERO) - borrow + BASE
-      #   new_digits.unsafe_put(dig, BASE_ZERO + (temp % BASE))
-      #   borrow = BASE_ZERO + (temp // BASE)
-      # end
-      # {new_digits, true}
       comp = first.compare_digits(second)
       return {[BASE_ZERO], true} if comp.zero?
 
