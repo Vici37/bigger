@@ -220,7 +220,7 @@ module Bigger
 
       new_digits.size.times do |i|
         upper_bits = (i == (new_digits.size - 1) ? BASE_ZERO : (new_digits[i + 1] >> other) << other)
-        new_digits[i] = new_digits[i] >> other + upper_bits
+        new_digits[i] = (new_digits[i] >> other) + upper_bits
       end
 
       Bigger::Int.new(new_digits)
@@ -353,7 +353,6 @@ module Bigger
       prod = Bigger::Int.new
       (internal_digits.size).times do |i|
         new_digits = Array(BaseType).new(other.internal_digits.size + 1 + i) { BASE_ZERO }
-        # TODO: replace Int32 with Higher... and figure out the arithmetic overflow
         carry = HigherBufferType.zero
         (other.internal_digits.size).times do |j|
           temp_int = HigherBufferType.zero

@@ -11,15 +11,15 @@ module Math
       return Bigger::Int.new(Math.isqrt(num.internal_digits[0]))
     end
 
-    u = num
-    s = u + 1
-    until u >= s
-      s = u
-      t = s + (num // s)
-      u = (t // 2)
+    upper_bound = num
+    square_root = upper_bound + 1
+    until upper_bound >= square_root
+      square_root = upper_bound
+      temp = square_root + (num // square_root)
+      upper_bound = (temp // 2)
     end
 
-    s
+    square_root
   end
 
   def pw2ceil(num : Bigger::Int) : Bigger::Int
