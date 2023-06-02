@@ -3,14 +3,16 @@ require "../src/bigger"
 require "big"
 
 def print_result_table(results : Array(Benchmark::IPS::Job), *, reset = true)
-  headers = [" ", "Operations", "Average Op Time", "Slower"]
-  rows = results.flat_map(&.items)
+  headers = [" ", "Big Operations", "Bigger Operations", "Big Avg Op Time", "Bigger Avg Op Time", "Bigger vs Big"]
+  rows = results.flat_map(&.items).each_slice(2).to_a
 
   ljusts = [
-    {rows.max_of &.label.size, headers[0].size}.max,
-    {rows.max_of &.human_mean.strip.size, headers[1].size}.max,
-    {rows.max_of &.human_iteration_time.strip.size, headers[2].size}.max,
-    {rows.max_of &.human_compare.strip.size, headers[3].size}.max,
+    rows.max_of &.[0].label[7..].size,
+    {rows.max_of &.[1].human_mean.strip.size, headers[1].size}.max,
+    {rows.max_of &.[0].human_mean.strip.size, headers[2].size}.max,
+    {rows.max_of &.[1].human_iteration_time.strip.size, headers[3].size}.max,
+    {rows.max_of &.[0].human_iteration_time.strip.size, headers[4].size}.max,
+    rows.max_of &.[0].human_compare.strip.size,
   ]
 
   table = [
@@ -21,10 +23,12 @@ def print_result_table(results : Array(Benchmark::IPS::Job), *, reset = true)
   rows.each do |row|
     table << [
       "",
-      row.label.ljust(ljusts[0]),
-      row.human_mean.strip.ljust(ljusts[1]),
-      row.human_iteration_time.strip.ljust(ljusts[2]),
-      row.human_compare.strip.ljust(ljusts[3]),
+      row[0].label[7..].ljust(ljusts[0]),
+      row[1].human_mean.strip.ljust(ljusts[1]),
+      row[0].human_mean.strip.ljust(ljusts[2]),
+      row[1].human_iteration_time.strip.ljust(ljusts[3]),
+      row[0].human_iteration_time.strip.ljust(ljusts[4]),
+      row[0].human_compare.strip.ljust(ljusts[5]),
       "",
     ]
   end
@@ -51,13 +55,13 @@ macro benchmark(op, *, reverse = false)
   results << job
 
   {% if reverse %}
-  job.report("Bigger (a {{op.id}} b)") { a_bigger.{{op.id}}(b_bigger) }
-  job.report("   Big (a {{op.id}} b)") { a_big.{{op.id}}(b_big) }
-  job.report("Bigger (b {{op.id}} a)") { b_bigger.{{op.id}}(a_bigger) }
-  job.report("   Big (b {{op.id}} a)") { b_big.{{op.id}}(a_big) }
+  job.report("Bigger a {{op.id}} b") { a_bigger.{{op.id}}(b_bigger) }
+  job.report("   Big a {{op.id}} b") { a_big.{{op.id}}(b_big) }
+  job.report("Bigger b {{op.id}} a") { b_bigger.{{op.id}}(a_bigger) }
+  job.report("   Big b {{op.id}} a") { b_big.{{op.id}}(a_big) }
   {% else %}
-  job.report("Bigger {{op.id}}") { a_bigger.{{op.id}}(b_bigger) }
-  job.report("   Big {{op.id}}") { a_big.{{op.id}}(b_big) }
+  job.report("Bigger a {{op.id}} b") { a_bigger.{{op.id}}(b_bigger) }
+  job.report("   Big a {{op.id}} b") { a_big.{{op.id}}(b_big) }
   {% end %}
   job.execute
   print_result_table(results)
@@ -66,8 +70,8 @@ end
 macro benchmark_unary(op)
   job = Benchmark::IPS::Job.new(5, 2, nil)
   results << job
-  job.report("Bigger unary {{op.id}}") { a_bigger.{{op.id}} }
-  job.report("   Big unary {{op.id}}") { a_big.{{op.id}} }
+  job.report("Bigger {{op.id.size == 1 ? "#{op.id}a".id : "a#{op.id}".id}}") { a_bigger.{{op.id}} }
+  job.report("   Big {{op.id.size == 1 ? "#{op.id}a".id : "a#{op.id}".id}}") { a_big.{{op.id}} }
   job.execute
   print_result_table(results)
 end

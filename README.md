@@ -5,72 +5,58 @@ the same methods and interface that crystal's own `big` library provides.
 
 ## FAQ
 
-*Is this faster than `big`?*
+**Is this faster than `big`?**
 
 Nope.
 
-*Is it more memory efficient?*
+**Is it more memory efficient?**
 
 Still no.
 
-*Is it written in Crystal?*
+**Is it written in Crystal?**
 
 _Yes_.
 
-*Can it be made more efficient?*
+**Can it be made more efficient?**
 
 Absolutely. All operations were implemented using a naive algorithm. There's lots of room for improvement.
 
-*Is it actually bigger?*
+**Is it actually bigger?**
 
 No. But it could be! Maybe! Being written in crystal means it can be modified as needed to support different use cases.
 
 ## Features
 
-[x] Big Int
-[] Big Float
-[] Big Decimal
-[] Big Rational
+-[x] Big Int
+-[ ] Big Float
+-[ ] Big Decimal
+-[ ] Big Rational
 
 ## Performance
 
 Running with an intel i7-8565U 1.80GHz CPU. Benchmark run with numbers:
 
 ```crystal
-a = "418376253051223933501534965978459129894917720729884038908657101374047974"
-b = "56628806604608093150302361055407918781958950380522727726457202444371318"
+a = 418376253051223933501534965978459129894917720729884038908657101374047974
+b = 56628806604608093150302361055407918781958950380522727726457202444371318
 ```
 
-|                     | Operations | Average Op Time | Slower           |
-| ------------------- | ---------- | --------------- | ---------------- |
-| Bigger +            | 11.73M     | 85.28ns         | 2.85× slower     |
-|    Big +            | 33.40M     | 29.94ns         | fastest          |
-| Bigger -            | 5.33M      | 187.46ns        | 5.61× slower     |
-|    Big -            | 29.92M     | 33.42ns         | fastest          |
-| Bigger (a // b)     | 2.67k      | 373.87µs        | 7990.10× slower  |
-|    Big (a // b)     | 8.28M      | 120.80ns        | 2.58× slower     |
-| Bigger (b // a)     | 8.69M      | 115.04ns        | 2.46× slower     |
-|    Big (b // a)     | 21.37M     | 46.79ns         | fastest          |
-| Bigger (a % b)      | 2.90k      | 345.40µs        | 7437.07× slower  |
-|    Big (a % b)      | 8.40M      | 119.11ns        | 2.56× slower     |
-| Bigger (b % a)      | 9.24M      | 108.26ns        | 2.33× slower     |
-|    Big (b % a)      | 21.53M     | 46.44ns         | fastest          |
-| Bigger *            | 714.96k    | 1.40µs          | 29.19× slower    |
-|    Big *            | 20.87M     | 47.92ns         | fastest          |
-| Bigger tdiv         | 1.40k      | 713.13µs        | 11329.47× slower |
-|    Big tdiv         | 15.89M     | 62.94ns         | fastest          |
-| Bigger remainder    | 1.40k      | 714.39µs        | 6326.17× slower  |
-|    Big remainder    | 8.86M      | 112.93ns        | fastest          |
-| Bigger unary ~      | 5.75M      | 173.98ns        | 6.65× slower     |
-|    Big unary ~      | 38.23M     | 26.15ns         | fastest          |
-| Bigger unary !      | 659.51M    | 1.52ns          | fastest          |
-|    Big unary !      | 658.07M    | 1.52ns          | 1.00× slower     |
-| Bigger unary **(40) | 4.00k      | 250.00µs        | 88.84× slower    |
-|    Big unary **(40) | 355.36k    | 2.81µs          | fastest          |
-| Bigger unary <<(40) | 5.81M      | 172.11ns        | 5.84× slower     |
-|    Big unary <<(40) | 33.95M     | 29.45ns         | fastest          |
-| Bigger unary >>(40) | 7.99M      | 125.19ns        | 3.86× slower     |
-|    Big unary >>(40) | 30.85M     | 32.41ns         | fastest          |
+|               | Big Operations | Bigger Operations | Big Avg Op Time | Bigger Avg Op Time | Bigger vs Big    |
+| ------------- | -------------- | ----------------- | --------------- | ------------------ | ---------------- |
+| a + b         | 33.04M         | 11.79M            | 30.27ns         | 84.84ns            | 2.80× slower     |
+| a - b         | 29.95M         | 5.27M             | 33.39ns         | 189.74ns           | 5.68× slower     |
+| a // b        | 8.17M          | 2.76k             | 122.42ns        | 361.68µs           | 7077.79× slower  |
+| b // a        | 19.57M         | 8.75M             | 51.10ns         | 114.28ns           | 2.24× slower     |
+| a % b         | 8.33M          | 2.97k             | 120.04ns        | 336.78µs           | 7127.89× slower  |
+| b % a         | 21.16M         | 9.30M             | 47.25ns         | 107.47ns           | 2.27× slower     |
+| a * b         | 20.85M         | 710.91k           | 47.96ns         | 1.41µs             | 29.33× slower    |
+| a tdiv b      | 15.00M         | 1.35k             | 66.67ns         | 743.16µs           | 11147.29× slower |
+| a remainder b | 8.64M          | 1.38k             | 115.76ns        | 726.52µs           | 6276.13× slower  |
+| ~a            | 36.33M         | 5.72M             | 27.53ns         | 174.79ns           | 6.35× slower     |
+| !a            | 551.25M        | 552.46M           | 1.81ns          | 1.81ns             | fastest          |
+| a**(40)       | 351.06k        | 3.95k             | 2.85µs          | 252.97µs           | 88.81× slower    |
+| a<<(40)       | 34.64M         | 5.64M             | 28.87ns         | 177.19ns           | 6.14× slower     |
+| a>>(40)       | 31.42M         | 8.60M             | 31.83ns         | 116.27ns           | 3.65× slower     |
 
 This table was generated by running `make benchmark`.
 
