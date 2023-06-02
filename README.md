@@ -27,10 +27,10 @@ No. But it could be! Maybe! Being written in crystal means it can be modified as
 
 ## Features
 
--[x] Big Int
--[ ] Big Float
--[ ] Big Decimal
--[ ] Big Rational
+- [x] Big Int
+- [ ] Big Float
+- [ ] Big Decimal
+- [ ] Big Rational
 
 ## Performance
 
