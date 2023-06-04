@@ -3,16 +3,18 @@ require "../src/bigger"
 require "big"
 
 def print_result_table(results : Array(Benchmark::IPS::Job), *, reset = true)
-  headers = [" ", "Big Operations", "Bigger Operations", "Big Avg Op Time", "Bigger Avg Op Time", "Bigger vs Big"]
+  headers = [" ", "Big Avg Op Time", "Bigger Avg Op Time", "Bigger vs Big Time", "Big Mem", "Bigger Mem", "Bigger vs Big Mem"]
   rows = results.flat_map(&.items).each_slice(2).to_a
+  # pp! rows[0]
 
   ljusts = [
     rows.max_of &.[0].label[7..].size,
-    {rows.max_of &.[1].human_mean.strip.size, headers[1].size}.max,
-    {rows.max_of &.[0].human_mean.strip.size, headers[2].size}.max,
-    {rows.max_of &.[1].human_iteration_time.strip.size, headers[3].size}.max,
-    {rows.max_of &.[0].human_iteration_time.strip.size, headers[4].size}.max,
-    rows.max_of &.[0].human_compare.strip.size,
+    {rows.max_of &.[1].human_iteration_time.strip.size, headers[1].size}.max,
+    {rows.max_of &.[0].human_iteration_time.strip.size, headers[2].size}.max,
+    {rows.max_of &.[0].human_compare.strip.size, headers[3].size}.max,
+    {rows.max_of &.[1].bytes_per_op.to_s.size, headers[4].size}.max,
+    {rows.max_of &.[0].bytes_per_op.to_s.size, headers[5].size}.max,
+    headers[6].size,
   ]
 
   table = [
@@ -24,11 +26,12 @@ def print_result_table(results : Array(Benchmark::IPS::Job), *, reset = true)
     table << [
       "",
       row[0].label[7..].ljust(ljusts[0]),
-      row[1].human_mean.strip.ljust(ljusts[1]),
-      row[0].human_mean.strip.ljust(ljusts[2]),
-      row[1].human_iteration_time.strip.ljust(ljusts[3]),
-      row[0].human_iteration_time.strip.ljust(ljusts[4]),
-      row[0].human_compare.strip.ljust(ljusts[5]),
+      row[1].human_iteration_time.strip.ljust(ljusts[1]),
+      row[0].human_iteration_time.strip.ljust(ljusts[2]),
+      row[0].human_compare.strip.ljust(ljusts[3]),
+      row[1].bytes_per_op.humanize_bytes.ljust(ljusts[4]),
+      row[0].bytes_per_op.humanize_bytes.ljust(ljusts[5]),
+      "#{(row[0].bytes_per_op.to_f / row[1].bytes_per_op.to_f).format(decimal_places: 2)}x".ljust(ljusts[6]),
       "",
     ]
   end
